@@ -1,6 +1,7 @@
 package chess;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -75,14 +76,35 @@ public class ChessPiece {
 
     private Collection<ChessMove> calculateKingMoves(ChessBoard board, ChessPosition myPosition) {
         //calculate king moves--return set of possible moves for a king
-        // 1. on board boundaries and 2. if space is empty
-        if (inBounds(myPosition) & checkSpace(myPosition)) {
-            // move
-            return new ArrayList<>();
-        }
-
-        // or
+        // 1. on board boundaries and
+            // 2. if space is empty then add to array list
         // 3. Teammate or different color
+        ArrayList<ChessMove> possibleMoves = new ArrayList<>();
+        if(inBounds(myPosition.getRow()-1, myPosition.getColumn()-1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        if(inBounds(myPosition.getRow()-1, myPosition.getColumn())) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        if(inBounds(myPosition.getRow()-1, myPosition.getColumn()+1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        if(inBounds(myPosition.getRow()+1, myPosition.getColumn()-1)) {
+            addCloseMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
+        }
+        if(inBounds(myPosition.getRow(), myPosition.getColumn()-1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        if(inBounds(myPosition.getRow(), myPosition.getColumn()+1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        if(inBounds(myPosition.getRow()+1, myPosition.getColumn()-1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        if(inBounds(myPosition.getRow()+1, myPosition.getColumn()-1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        }
+        return possibleMoves;
     }
     private Collection<ChessMove> calculateQueenMoves(ChessBoard board, ChessPosition myPosition) {
         return new ArrayList<>();
@@ -93,6 +115,7 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> calculateKnightMoves(ChessBoard board, ChessPosition myPosition) {
+        // 8 potential moves
         return new ArrayList<>();
     }
 
@@ -104,15 +127,33 @@ public class ChessPiece {
         return new ArrayList<>();
     }
 
-    public Boolean inBounds (ChessPosition myPosition) {
-        if(myPosition.getRow() > 8 | myPosition.getRow() < 1 | myPosition.getColumn() > 8 | myPosition.getColumn() <  1) {
-            return false;
-        }
-        return true;
-        }
-
-
+    public Boolean inBounds (int row, int col) {
+        return row > 0 && row <= 8 && col > 0 && col <= 8;
     }
+
+    public void addCloseMove (ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
+        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
+        if (newPiece == null) {
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null);
+        }
+        else if (newPiece.getTeamColor() != this.getTeamColor()) {
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessPiece that = (ChessPiece) o;
+        return color == that.color && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(color, type);
+    }
+}
 
 
 
