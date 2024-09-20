@@ -77,53 +77,85 @@ public class ChessPiece {
     private Collection<ChessMove> calculateKingMoves(ChessBoard board, ChessPosition myPosition) {
         //calculate king moves--return set of possible moves for a king
         // 1. on board boundaries and
-            // 2. if space is empty then add to array list
+        // 2. if space is empty then add to array list
         // 3. Teammate or different color
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
         if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() - 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
         }
         if(inBounds(myPosition.getRow() - 1, myPosition.getColumn())) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
         }
         if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() + 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1);
         }
         if(inBounds(myPosition.getRow() + 1, myPosition.getColumn())) {
-            addCloseMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
+            addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
         }
         if(inBounds(myPosition.getRow(), myPosition.getColumn() - 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() - 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() - 1);
         }
         if(inBounds(myPosition.getRow(), myPosition.getColumn() + 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() + 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() + 1);
         }
         if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
         }
         if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() + 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 1);
         }
         return possibleMoves;
     }
+
     private Collection<ChessMove> calculateQueenMoves(ChessBoard board, ChessPosition myPosition) {
+        // bishop
+        // rook
         return new ArrayList<>();
     }
 
     private Collection<ChessMove> calculateBishopMoves(ChessBoard board, ChessPosition myPosition) {
+        // long move
         return new ArrayList<>();
     }
 
     private Collection<ChessMove> calculateKnightMoves(ChessBoard board, ChessPosition myPosition) {
         // 8 potential moves
-        return new ArrayList<>();
+        ArrayList<ChessMove> possibleMoves = new ArrayList<>();
+        if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() + 2 )) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 2);
+        }
+        if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() - 2 )) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() -  2);
+        }
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() + 2)) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 2);
+        }
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 2)) {
+            addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 2);
+        }
+        if(inBounds(myPosition.getRow() - 2, myPosition.getColumn() + 1)) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 2, myPosition.getColumn() + 1);
+        }
+        if(inBounds(myPosition.getRow() + 2, myPosition.getColumn() - 1)) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() + 2, myPosition.getColumn() - 1);
+        }
+        if(inBounds(myPosition.getRow() + 2 , myPosition.getColumn() + 1)) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() + 2, myPosition.getColumn() + 1);
+        }
+        if(inBounds(myPosition.getRow() - 2, myPosition.getColumn() - 1)) {
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() -2, myPosition.getColumn() - 1);
+        }
+        return possibleMoves;
     }
 
     private Collection<ChessMove> calculateRookMoves(ChessBoard board, ChessPosition myPosition) {
+        // long
         return new ArrayList<>();
     }
 
     private Collection<ChessMove> calculatePawnMoves(ChessBoard board, ChessPosition myPosition) {
+        // separate by color
+        //  6 possible directions
         return new ArrayList<>();
     }
 
@@ -131,15 +163,31 @@ public class ChessPiece {
         return row > 0 && row <= 8 && col > 0 && col <= 8;
     }
 
-    public void addCloseMove (ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
+    public void addShortMove(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
         ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
         if (newPiece == null) {
             possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
-        }
-        else if (newPiece.getTeamColor() != this.getTeamColor()) {
+        } else if (newPiece.getTeamColor() != this.getTeamColor()) {
             possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
         }
+    }
 
+    public void addLongMove (ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col, int hor, int ver) {
+        while(inBounds(row, col)) {
+            ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
+            if (newPiece == null) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+                col = col + ver;
+                row = row + hor;
+            }
+            else if (newPiece.getTeamColor() != this.getTeamColor()) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+                break;
+            }
+            else {
+                break;
+            }
+        }
     }
 
     @Override
