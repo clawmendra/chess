@@ -109,8 +109,8 @@ public class ChessPiece {
 
     private Collection<ChessMove> calculateQueenMoves(ChessBoard board, ChessPosition myPosition) {
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
-//        possibleMoves.add(calculateBishopMoves(board, myPosition));
-//        calculateRookMoves(board, myPosition);
+        possibleMoves.addAll(calculateBishopMoves(board, myPosition));
+        possibleMoves.addAll(calculateRookMoves(board, myPosition));
         return possibleMoves;
     }
 
@@ -164,7 +164,8 @@ public class ChessPiece {
 
     private Collection<ChessMove> calculatePawnMoves(ChessBoard board, ChessPosition myPosition) {
         // separate by color
-        //  6 possible directions
+        // 6 possible directions
+
         return new ArrayList<>();
     }
 
