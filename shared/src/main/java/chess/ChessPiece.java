@@ -89,20 +89,20 @@ public class ChessPiece {
         if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() + 1)) {
             addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1);
         }
-        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
-            addCloseMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn())) {
+            addCloseMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
         }
-        if(inBounds(myPosition.getRow(), myPosition.getColumn()-1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow(), myPosition.getColumn() - 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() - 1);
         }
         if(inBounds(myPosition.getRow(), myPosition.getColumn() + 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
-        }
-        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() + 1);
         }
         if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
             addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
+        }
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() + 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 1);
         }
         return possibleMoves;
     }
