@@ -109,14 +109,18 @@ public class ChessPiece {
 
     private Collection<ChessMove> calculateQueenMoves(ChessBoard board, ChessPosition myPosition) {
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
-        // bishop
-        // rook
+//        possibleMoves.add(calculateBishopMoves(board, myPosition));
+//        calculateRookMoves(board, myPosition);
         return possibleMoves;
     }
 
     private Collection<ChessMove> calculateBishopMoves(ChessBoard board, ChessPosition myPosition) {
-        // long move
-        return new ArrayList<>();
+        ArrayList<ChessMove> possibleMoves = new ArrayList<>();
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 1, 1, 1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1, 1, -1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1, -1, 1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1, -1, -1);
+        return possibleMoves;
     }
 
     private Collection<ChessMove> calculateKnightMoves(ChessBoard board, ChessPosition myPosition) {
