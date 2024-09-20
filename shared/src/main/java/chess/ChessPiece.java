@@ -163,10 +163,29 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> calculatePawnMoves(ChessBoard board, ChessPosition myPosition) {
-        // separate by color
-        // 6 possible directions
+        ArrayList<ChessMove> possibleMoves = new ArrayList<>();
+        // if the pawn is black, then keep track of when it goes to row 1 and pick a promotion piece
+        if (getTeamColor() == ChessGame.TeamColor.BLACK) {
+            // First move
+            if (myPosition.getRow() == 7) {
+                if (inBounds(myPosition.getRow() - 2, myPosition.getColumn())) {
+                    addShortMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
+                }
+                if (inBounds(myPosition.getRow() - 1, myPosition.getColumn()) {
 
-        return new ArrayList<>();
+                }
+
+            }
+        }
+    // if the pawn is white, then keep track of when it goes to row 8 and pick a promotion piece
+        if (getTeamColor() == ChessGame.TeamColor.WHITE) {
+            // First move
+            if (myPosition.getRow() == 2) {
+
+            }
+
+    }
+
     }
 
     public Boolean inBounds (int row, int col) {
