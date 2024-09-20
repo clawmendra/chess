@@ -108,9 +108,10 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> calculateQueenMoves(ChessBoard board, ChessPosition myPosition) {
+        ArrayList<ChessMove> possibleMoves = new ArrayList<>();
         // bishop
         // rook
-        return new ArrayList<>();
+        return possibleMoves;
     }
 
     private Collection<ChessMove> calculateBishopMoves(ChessBoard board, ChessPosition myPosition) {
@@ -143,14 +144,18 @@ public class ChessPiece {
             addShortMove(board,myPosition, possibleMoves, myPosition.getRow() + 2, myPosition.getColumn() + 1);
         }
         if(inBounds(myPosition.getRow() - 2, myPosition.getColumn() - 1)) {
-            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() -2, myPosition.getColumn() - 1);
+            addShortMove(board,myPosition, possibleMoves, myPosition.getRow() - 2, myPosition.getColumn() - 1);
         }
         return possibleMoves;
     }
 
     private Collection<ChessMove> calculateRookMoves(ChessBoard board, ChessPosition myPosition) {
-        // long
-        return new ArrayList<>();
+        ArrayList<ChessMove> possibleMoves = new ArrayList<>();
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() + 1, 0, 1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn() - 1, 0, -1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn(), 1, 0);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn(), -1, 0);
+        return possibleMoves;
     }
 
     private Collection<ChessMove> calculatePawnMoves(ChessBoard board, ChessPosition myPosition) {
