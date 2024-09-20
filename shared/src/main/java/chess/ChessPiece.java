@@ -165,27 +165,52 @@ public class ChessPiece {
     private Collection<ChessMove> calculatePawnMoves(ChessBoard board, ChessPosition myPosition) {
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
         // if the pawn is black, then keep track of when it goes to row 1 and pick a promotion piece
-        if (getTeamColor() == ChessGame.TeamColor.BLACK) {
-            // First move
+        if (this.getTeamColor() == ChessGame.TeamColor.BLACK) {
+            // If the black pawn starts at the beginning then...
             if (myPosition.getRow() == 7) {
+                // if they move 2 forward on the first round
                 if (inBounds(myPosition.getRow() - 2, myPosition.getColumn())) {
-                    addShortMove(board,myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
+                    addShortMove(board, myPosition, possibleMoves, myPosition.getRow() - 2, myPosition.getColumn());
                 }
-                if (inBounds(myPosition.getRow() - 1, myPosition.getColumn()) {
-
+                // else they only move once
+                if (inBounds(myPosition.getRow() - 1, myPosition.getColumn())) {
+                    addShortMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
                 }
-
             }
+
+            // if it's not at beginning then it can only move once
+            else {
+                onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
+            }
+
         }
     // if the pawn is white, then keep track of when it goes to row 8 and pick a promotion piece
-        if (getTeamColor() == ChessGame.TeamColor.WHITE) {
-            // First move
+        if (this.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            // If the white pawn starts at the beginning then...
             if (myPosition.getRow() == 2) {
-
+                // if they move 2 forward first round
+                if (inBounds(myPosition.getRow() + 2, myPosition.getColumn())) {
+                    onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() + 2, myPosition.getColumn());
+                }
+                if (inBounds(myPosition.getRow() + 1, myPosition.getColumn())) {
+                    onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
+                }
             }
-
+            else onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
+    }
+        return possibleMoves;
     }
 
+    private void onlyPawnMoves (ChessBoard board, ChessPosition myPosition, Collection <ChessMove> possibleMoves, int row, int col ) {
+        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
+        // empty space
+        if (newPiece == null) {
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col),null));
+        }
+        // opponent piece
+        else if (newPiece.getTeamColor() != this.getTeamColor()) {
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+        }
     }
 
     public Boolean inBounds (int row, int col) {
