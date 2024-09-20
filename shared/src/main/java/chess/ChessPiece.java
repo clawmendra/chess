@@ -192,10 +192,7 @@ public class ChessPiece {
             }
             // black pawn reaches front of board -- promote
             if (myPosition.getRow() == 1) {
-                possibleMoves.addAll(calculateRookMoves(board, myPosition));
-                possibleMoves.addAll(calculateKnightMoves(board, myPosition));
-                possibleMoves.addAll(calculateBishopMoves(board, myPosition));
-                possibleMoves.addAll(calculateQueenMoves(board, myPosition));
+                promotePawn(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
             }
 
             return possibleMoves;
@@ -227,28 +224,35 @@ public class ChessPiece {
             }
             // white pawn reaches end of board -- promote
             if (myPosition.getRow() == 8) {
-                possibleMoves.addAll(calculateRookMoves(board, myPosition));
-                possibleMoves.addAll(calculateKnightMoves(board, myPosition));
-                possibleMoves.addAll(calculateBishopMoves(board, myPosition));
-                possibleMoves.addAll(calculateQueenMoves(board, myPosition);
+                promotePawn(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
             }
-
         }
         return possibleMoves;
     }
 
 
-//    private void onlyPawnMoves (ChessBoard board, ChessPosition myPosition, Collection <ChessMove> possibleMoves, int row, int col ) {
-//        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
-//        // empty space
-//        if (newPiece == null) {
-//            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col),null));
-//        }
-//        // opponent move
-//        else if (newPiece.getTeamColor() != this.getTeamColor()) {
-//            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
-//        }
-//    }
+    public void promotePawn(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
+        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
+        // forward move at end of board
+        if (newPiece == null) {
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.QUEEN));
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.KNIGHT));
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.ROOK));
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.BISHOP));
+        }
+        // Diagonal capture at end of board
+        else if (newPiece.getTeamColor() != this.getTeamColor()) {
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.QUEEN));
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.KNIGHT));
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.ROOK));
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.BISHOP));
+        }
+
+    }
+
+        // 1. if front null can move
+        // 2. if front piece is blocked
+        // 3. diagonal capture only for oppoenent
 
     public Boolean inBounds (int row, int col) {
         return row > 0 && row <= 8 && col > 0 && col <= 8;
