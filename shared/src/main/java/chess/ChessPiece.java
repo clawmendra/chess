@@ -80,29 +80,29 @@ public class ChessPiece {
             // 2. if space is empty then add to array list
         // 3. Teammate or different color
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
-        if(inBounds(myPosition.getRow()-1, myPosition.getColumn()-1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() - 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
         }
-        if(inBounds(myPosition.getRow()-1, myPosition.getColumn())) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow() - 1, myPosition.getColumn())) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
         }
-        if(inBounds(myPosition.getRow()-1, myPosition.getColumn()+1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow() - 1, myPosition.getColumn() + 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1);
         }
-        if(inBounds(myPosition.getRow()+1, myPosition.getColumn()-1)) {
-            addCloseMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
+            addCloseMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
         }
         if(inBounds(myPosition.getRow(), myPosition.getColumn()-1)) {
             addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
         }
-        if(inBounds(myPosition.getRow(), myPosition.getColumn()+1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow(), myPosition.getColumn() + 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
         }
-        if(inBounds(myPosition.getRow()+1, myPosition.getColumn()-1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
         }
-        if(inBounds(myPosition.getRow()+1, myPosition.getColumn()-1)) {
-            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow()-1, myPosition.getColumn()-1);
+        if(inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
+            addCloseMove(board,myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
         }
         return possibleMoves;
     }
@@ -134,11 +134,12 @@ public class ChessPiece {
     public void addCloseMove (ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
         ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
         if (newPiece == null) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null);
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
         }
         else if (newPiece.getTeamColor() != this.getTeamColor()) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null);
+            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
         }
+
     }
 
     @Override
