@@ -177,41 +177,78 @@ public class ChessPiece {
                     addShortMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
                 }
             }
-
+            // diagonal left-capture
+            if (inBounds(myPosition.getRow() - 1, myPosition.getColumn() - 1)) {
+                addShortMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1);
+            }
+            // diagonal right-capture
+            if (inBounds(myPosition.getRow() - 1, myPosition.getColumn() + 1)) {
+                addShortMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1);
+            }
             // if it's not at beginning then it can only move once
-            else {
-                onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
+            // default move for black
+            if (inBounds(myPosition.getRow() - 1, myPosition.getColumn())) {
+                addShortMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn());
+            }
+            // black pawn reaches front of board -- promote
+            if (myPosition.getRow() == 1) {
+                possibleMoves.addAll(calculateRookMoves(board, myPosition));
+                possibleMoves.addAll(calculateKnightMoves(board, myPosition));
+                possibleMoves.addAll(calculateBishopMoves(board, myPosition));
+                possibleMoves.addAll(calculateQueenMoves(board, myPosition));
             }
 
+            return possibleMoves;
         }
-    // if the pawn is white, then keep track of when it goes to row 8 and pick a promotion piece
+        // if the pawn is white, then keep track of when it goes to row 8 and pick a promotion piece
         if (this.getTeamColor() == ChessGame.TeamColor.WHITE) {
             // If the white pawn starts at the beginning then...
             if (myPosition.getRow() == 2) {
                 // if they move 2 forward first round
                 if (inBounds(myPosition.getRow() + 2, myPosition.getColumn())) {
-                    onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() + 2, myPosition.getColumn());
+                    addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 2, myPosition.getColumn());
                 }
                 if (inBounds(myPosition.getRow() + 1, myPosition.getColumn())) {
-                    onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
+                    addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
                 }
             }
-            else onlyPawnMoves(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
-    }
+            // if it starts anywhere else...
+            // diagonal left-capture
+            if (inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
+                addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1);
+            }
+            // diagonal right-capture
+            if (inBounds(myPosition.getRow() + 1, myPosition.getColumn() + 1)) {
+                addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 1);
+            }
+            // default move for white
+            if (inBounds(myPosition.getRow() + 1, myPosition.getColumn())) {
+                addShortMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn());
+            }
+            // white pawn reaches end of board -- promote
+            if (myPosition.getRow() == 8) {
+                possibleMoves.addAll(calculateRookMoves(board, myPosition));
+                possibleMoves.addAll(calculateKnightMoves(board, myPosition));
+                possibleMoves.addAll(calculateBishopMoves(board, myPosition));
+                possibleMoves.addAll(calculateQueenMoves(board, myPosition);
+            }
+
+        }
         return possibleMoves;
     }
 
-    private void onlyPawnMoves (ChessBoard board, ChessPosition myPosition, Collection <ChessMove> possibleMoves, int row, int col ) {
-        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
-        // empty space
-        if (newPiece == null) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col),null));
-        }
-        // opponent piece
-        else if (newPiece.getTeamColor() != this.getTeamColor()) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
-        }
-    }
+
+//    private void onlyPawnMoves (ChessBoard board, ChessPosition myPosition, Collection <ChessMove> possibleMoves, int row, int col ) {
+//        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
+//        // empty space
+//        if (newPiece == null) {
+//            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col),null));
+//        }
+//        // opponent move
+//        else if (newPiece.getTeamColor() != this.getTeamColor()) {
+//            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+//        }
+//    }
 
     public Boolean inBounds (int row, int col) {
         return row > 0 && row <= 8 && col > 0 && col <= 8;
