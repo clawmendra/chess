@@ -165,8 +165,8 @@ public class ChessPiece {
     private Collection<ChessMove> calculatePawnMoves(ChessBoard board, ChessPosition myPosition) {
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
         if (this.getTeamColor() == ChessGame.TeamColor.BLACK) {
-            moveBlackPawn(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
-        }
+                moveBlackPawn(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
+            }
         else {
             moveWhitePawn(board, myPosition, possibleMoves, myPosition.getRow(), myPosition.getColumn());
         }
@@ -175,40 +175,120 @@ public class ChessPiece {
 
 
     public void moveBlackPawn(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
-        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
-        // Default 1 move forward if empty
-        if (newPiece == null) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+        if (inBounds(myPosition.getRow() - 1, myPosition.getColumn())) {
+            ChessPiece newPiece1down = board.getPiece(new ChessPosition(row - 1, col));
+            // empty and reaches other side promoted
+            if (newPiece1down == null && row == 2) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1 , col), PieceType.QUEEN));
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1, col), PieceType.KNIGHT));
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1 , col), PieceType.ROOK));
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1, col), PieceType.BISHOP));
+            }
+            // Default 1 move forward if empty
+            else if (newPiece1down == null) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1, col), null));
+            }
         }
-        // first turn--2 squares
-        if (newPiece == null && row == 7) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+        if (inBounds(myPosition.getRow() - 2, col)) {
+            ChessPiece newPiece2down = board.getPiece(new ChessPosition(row - 2, col));
+            ChessPiece newPiece1down = board.getPiece(new ChessPosition(row - 1, col));
+            // first turn 2 squares
+            if (newPiece2down == null && newPiece1down == null && row == 7) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 2, col), null));
+            }
         }
-        // opponent diagonal attack and promoted
-        if (newPiece.getTeamColor() != this.getTeamColor() && row == 1) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.QUEEN));
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.KNIGHT));
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.ROOK));
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.BISHOP));
+      if (inBounds(myPosition.getRow() - 1, myPosition.getColumn() -1)) {
+          ChessPiece downLeft = board.getPiece(new ChessPosition(row - 1, col - 1));
+          // opponent diagonal attack and promoted
+          if (downLeft != null) {
+              int newRow = row - 1;
+              int newCol = row - 1;
+              if (downLeft.getTeamColor() != this.getTeamColor() && row == 2) {
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.QUEEN));
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.KNIGHT));
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.ROOK));
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.BISHOP));
+              }
+              // opponent diagonal attack
+              else if (downLeft.getTeamColor() != this.getTeamColor()) {
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row -1, col -1 ), null));
+              }
+          }
         }
+      if (inBounds(myPosition.getRow() - 1, myPosition. getColumn() + 1)) {
+          ChessPiece downRight = board.getPiece(new ChessPosition(row - 1, col + 1));
+          if (downRight != null) {
+              if (downRight.getTeamColor() != this.getTeamColor() && row == 2) {
+                  int newrow = row-1;
+                  int newcol= col+1;
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.QUEEN));
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.KNIGHT));
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.ROOK));
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.BISHOP));
+              }
+              if (downRight.getTeamColor() != this.getTeamColor()) {
+                  possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row - 1, col + 1), null));
+              }
+          }
+      }
     }
 
     public void moveWhitePawn(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> possibleMoves, int row, int col) {
-        ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
-        // Default 1 move forward if empty
-        if (newPiece == null) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+        if (inBounds(myPosition.getRow() + 1, myPosition.getColumn())) {
+            ChessPiece newPiece1down = board.getPiece(new ChessPosition(row + 1, col));
+            // empty and reaches other side promoted
+            if (newPiece1down == null && row == 7) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col), PieceType.QUEEN));
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col), PieceType.KNIGHT));
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col), PieceType.ROOK));
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col), PieceType.BISHOP));
+            }
+            // Default 1 move forward if empty
+            else if (newPiece1down == null) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col), null));
+            }
         }
-        // first turn--2 squares
-        if (newPiece == null && row == 2) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), null));
+        if (inBounds(myPosition.getRow() + 2, col)) {
+            ChessPiece newPiece2down = board.getPiece(new ChessPosition(row + 2, col));
+            ChessPiece newPiece1down = board.getPiece(new ChessPosition(row + 1, col));
+            // first turn 2 squares
+            if (newPiece2down == null && newPiece1down == null && row == 2) {
+                possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 2, col), null));
+            }
         }
-        // opponent diagonal attack and promoted
-        if (newPiece.getTeamColor() != this.getTeamColor() && row == 8) {
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.QUEEN));
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.KNIGHT));
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.ROOK));
-            possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row, col), PieceType.BISHOP));
+        if (inBounds(myPosition.getRow() + 1, myPosition.getColumn() + 1)) {
+            ChessPiece downLeft = board.getPiece(new ChessPosition(row + 1, col + 1));
+            // opponent diagonal attack and promoted
+            if (downLeft != null) {
+                int newRow = row + 1;
+                int newCol = row + 1;
+                if (downLeft.getTeamColor() != this.getTeamColor() && row == 7) {
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.QUEEN));
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.KNIGHT));
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.ROOK));
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newRow, newCol), PieceType.BISHOP));
+                }
+                // opponent diagonal attack
+                else if (downLeft.getTeamColor() != this.getTeamColor()) {
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col + 1), null));
+                }
+            }
+        }
+        if (inBounds(myPosition.getRow() + 1, myPosition.getColumn() - 1)) {
+            ChessPiece downRight = board.getPiece(new ChessPosition(row + 1, col - 1));
+            if (downRight != null) {
+                if (downRight.getTeamColor() != this.getTeamColor() && row == 7) {
+                    int newrow = row + 1;
+                    int newcol = col - 1;
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.QUEEN));
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.KNIGHT));
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.ROOK));
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(newrow, newcol), PieceType.BISHOP));
+                }
+                if (downRight.getTeamColor() != this.getTeamColor()) {
+                    possibleMoves.add(new ChessMove(myPosition, new ChessPosition(row + 1, col - 1), null));
+                }
+            }
         }
     }
 
