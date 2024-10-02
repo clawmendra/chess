@@ -118,8 +118,8 @@ public class ChessPiece {
         ArrayList<ChessMove> possibleMoves = new ArrayList<>();
         addLongMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() + 1, 1, 1);
         addLongMove(board, myPosition, possibleMoves, myPosition.getRow() + 1, myPosition.getColumn() - 1, 1, -1);
-        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1, -1, 1);
-        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1, -1, -1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() + 1, - 1, 1);
+        addLongMove(board, myPosition, possibleMoves, myPosition.getRow() - 1, myPosition.getColumn() - 1, - 1, - 1);
         return possibleMoves;
     }
 
