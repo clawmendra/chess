@@ -67,7 +67,11 @@ public class ChessGame {
             ChessPiece movingPiece = tempBoard.getPiece(move.getStartPosition());
             tempBoard.addPiece(move.getEndPosition(), movingPiece);
             tempBoard.addPiece(move.getStartPosition(), null);
-        }}
+            if (!isInCheckAfterMove(tempBoard, startPiece.getTeamColor())) {
+                validMoves.add(move);
+            }}
+return validMoves;
+}
 
     /**
      * Makes a move in a chess game
@@ -174,5 +178,5 @@ public class ChessGame {
                     ChessPosition position = new ChessPosition(row, col);
                     ChessPiece piece = current.getPiece(position);
                     copy.addPiece(position, piece);
-                }}}}
+                }}}
 
