@@ -164,6 +164,11 @@ return validMoves;
          * @return True if the specified team is in stalemate, otherwise false
          */
         public boolean isInStalemate (TeamColor teamColor) {
+            // If the king is in check, it cannot be a stalemate
+            if (isInCheck(teamColor)) {
+                return false;
+            }
+
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
                     ChessPosition pos = new ChessPosition(row, col);
