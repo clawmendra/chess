@@ -2,6 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -17,6 +18,7 @@ public class ChessGame {
         this.board = new ChessBoard();
         // white goes first
         this.currentTurn = TeamColor.WHITE;
+        board.resetBoard();
     }
 
     /**
@@ -53,13 +55,14 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-//     Checks all possible moves for a piece and filters out any that would leave the king in check.
+    // Checks all possible moves for a piece and filters out any that would leave the king in check.
         ChessPiece startPiece = board.getPiece(startPosition);
         if (startPiece == null) {
             return new ArrayList<>();
         }
         Collection<ChessMove> posMoves = startPiece.pieceMoves(board, startPosition);
         Collection<ChessMove> validMoves = new ArrayList<>();
+
         for (ChessMove move : posMoves) {
             // try the move on the temp board
             ChessBoard tempBoard = new ChessBoard();
@@ -120,8 +123,7 @@ public class ChessGame {
                 if (piece != null && piece.getPieceType() == ChessPiece.PieceType.KING && piece.getTeamColor() == teamColor) {
                     kingPos= position;
                     break;
-                }
-            }
+                }}
             if (kingPos != null)
                 break;
         }
@@ -153,8 +155,25 @@ public class ChessGame {
             if(!isInCheck(teamColor)) {
                 return false;
             }
-            return isInStalemate(teamColor);
+            for (int row = 1; row <= 8; row ++) {
+                for (int col = 1; col <= 8; col++) {
+                    ChessPosition pos = new ChessPosition(row, col);
+                    ChessPiece piece = board.getPiece(pos);
+                    if (piece != null && piece.getTeamColor() == teamColor) {
+                        Collection<ChessMove> moves = validMoves(pos);
+                        for (ChessMove move : moves) {
+                            ChessBoard tempBoard = new ChessBoard();
+                            copyBoard(board, tempBoard);
+                            ChessPiece movePiece = tempBoard.getPiece(move.getStartPosition());
+                            tempBoard.addPiece(move.getEndPosition(), movePiece);
+                            tempBoard.addPiece(move.getStartPosition(), null);
+                            if (!isInCheckAfterMove(tempBoard, teamColor)) {
+                                return false;
+                            }}}}}
+            return true;
         }
+
+
 
         /**
          * Determines if the given team is in stalemate, which here is defined as having
@@ -164,16 +183,24 @@ public class ChessGame {
          * @return True if the specified team is in stalemate, otherwise false
          */
         public boolean isInStalemate (TeamColor teamColor) {
+            // can only be stale if not in check
+            if (isInCheck(teamColor)) {
+                return false;
+            }
+            boolean newPiece = false;
+            // check all pieces for valid moves
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
                     ChessPosition pos = new ChessPosition(row, col);
                     ChessPiece piece = board.getPiece(pos);
                     if (piece != null && piece.getTeamColor() == teamColor) {
+                       newPiece = true;
                         Collection<ChessMove> moves = validMoves(pos);
-                        if (moves != null && !moves.isEmpty()) {
+                        // not empty--not stalemate
+                        if (!moves.isEmpty()) {
                             return false;
                         }}}}
-            return true;
+            return newPiece;
         }
         /**
          * Sets this game's chessboard with a given board
@@ -196,12 +223,26 @@ public class ChessGame {
         private void copyBoard(ChessBoard currentBoard, ChessBoard copyBoard) {
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
-                    ChessPosition position = new ChessPosition(row, col);
-                    ChessPiece piece = currentBoard.getPiece(position);
+                    ChessPosition pos = new ChessPosition(row, col);
+                    ChessPiece piece = currentBoard.getPiece(pos);
                     // copy piece if it exists
                     if (piece != null) {
-                        piece = new ChessPiece(piece.getTeamColor(), piece.getPieceType());
-                    }
-                    copyBoard.addPiece(position, piece);
-                }}}}
+                        copyBoard.addPiece(pos, new ChessPiece(piece.getTeamColor(), piece.getPieceType()));
+                    } else {
+                    copyBoard.addPiece(pos, null);
+                    }}}}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChessGame chessGame = (ChessGame) o;
+        return Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, currentTurn);
+    }
+}
 
