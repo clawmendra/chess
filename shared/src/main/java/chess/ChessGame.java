@@ -55,8 +55,8 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
 //     Checks all possible moves for a piece and filters out any that would leave the king in check.
         ChessPiece startPiece = board.getPiece(startPosition);
-        if (startPiece == null || startPiece.getTeamColor() != currentTurn) {
-            return null;
+        if (startPiece == null) {
+            return new ArrayList<>();
         }
         Collection<ChessMove> posMoves = startPiece.pieceMoves(board, startPosition);
         Collection<ChessMove> validMoves = new ArrayList<>();
@@ -70,7 +70,7 @@ public class ChessGame {
             if (!isInCheckAfterMove(tempBoard, startPiece.getTeamColor())) {
                 validMoves.add(move);
             }}
-return validMoves;
+    return validMoves;
 }
 
     /**
