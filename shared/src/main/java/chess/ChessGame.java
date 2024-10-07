@@ -112,18 +112,22 @@ return validMoves;
 
     private boolean isInCheckAfterMove(ChessBoard checkBoard, TeamColor teamColor) {
         // Find the king's position
-        ChessPosition kingPosition = null;
+        ChessPosition kingPos = null;
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition position = new ChessPosition(row, col);
                 ChessPiece piece = checkBoard.getPiece(position);
                 if (piece != null && piece.getPieceType() == ChessPiece.PieceType.KING && piece.getTeamColor() == teamColor) {
-                    kingPosition = position;
+                    kingPos= position;
                     break;
                 }
             }
-            if (kingPosition != null)
+            if (kingPos != null)
                 break;
+        }
+        // no king is found--error
+        if (kingPos == null) {
+            return false;
         }
         // Check if any opponent piece can capture the king
         TeamColor oppColor = (teamColor == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
@@ -134,7 +138,7 @@ return validMoves;
                 if (piece != null && piece.getTeamColor() == oppColor) {
                     Collection<ChessMove> moves = piece.pieceMoves(checkBoard, pos);
                     for (ChessMove move : moves) {
-                        if (move.getEndPosition().equals(kingPosition)) {
+                        if (move.getEndPosition().equals(kingPos)) {
                             return true;
                         }}}}}
             return false;
