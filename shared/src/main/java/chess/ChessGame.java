@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -11,6 +12,7 @@ import java.util.Collection;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor currentTurn;
+
     public ChessGame() {
         this.board = new ChessBoard();
         // white goes first
@@ -51,10 +53,25 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-       throw new RuntimeException("Not implemented");
+//     Checks all possible moves for a piece and filters out any that would leave the king in check.
+        ChessPiece startPiece = board.getPiece(startPosition);
+        if (startPiece == null || startPiece.getTeamColor() != currentTurn) {
+            return null;
+        }
+        Collection<ChessMove> posMoves = startPiece.pieceMoves(board, startPosition);
+        Collection<ChessMove> validMoves = new ArrayList<>();
+        for (ChessMove move : posMoves) {
+            // try the move on the temp board
+            ChessBoard tempBoard = new ChessBoard();
+            copyBoard(board, tempBoard);
+            ChessPiece movingPiece = tempBoard.getPiece(move.getStartPosition());
+            tempBoard.addPiece(move.getEndPosition(), movingPiece);
+            tempBoard.addPiece(move.getStartPosition(), null);
 
 
+        }
     }
+
 
     /**
      * Makes a move in a chess game
@@ -63,7 +80,7 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        throw new InvalidMoveException("Move is invalid");
     }
 
     /**
@@ -73,9 +90,28 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        return isInCheckAfterMove(this.board, teamColor);
     }
 
+    private boolean isInCheckAfterMove(ChessBoard checkBoard, TeamColor teamColor) {
+        // Find the king's position
+        ChessPosition kingPosition = null;
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = checkBoard.getPiece(position);
+                if (piece != null && piece.getPieceType() == ChessPiece.PieceType.KING
+                        && piece.getTeamColor() == teamColor) {
+                    kingPosition = position;
+                    break;
+                }
+            }
+            if (kingPosition != null)
+                break;
+        }
+
+
+    }
     /**
      * Determines if the given team is in checkmate
      *
@@ -104,7 +140,6 @@ public class ChessGame {
      */
     public void setBoard(ChessBoard board) {
         this.board = board;
-        // throw new RuntimeException("Not implemented");
     }
 
     /**
@@ -113,7 +148,16 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        // throw new RuntimeException("Not implemented");
         return board;
+    }
+
+    private void copyBoard(ChessBoard current, ChessBoard copy) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++){
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = current.getPiece(position);
+                copy.addPiece(position, piece);
+            }
+        }
     }
 }
