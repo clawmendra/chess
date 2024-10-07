@@ -80,8 +80,25 @@ return validMoves;
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new InvalidMoveException("Move is invalid");
+        ChessPiece piece = board.getPiece(move.getStartPosition());
+        if (piece == null || piece.getTeamColor() != currentTurn) {
+            throw new InvalidMoveException("Move is invalid");
+        }
+        Collection<ChessMove> moves = validMoves(move.getStartPosition());
+        if (moves == null || !moves.contains(move)) {
+            throw new InvalidMoveException("Move is invalid");
+        }
+        // Make move
+        if (move.getPromotionPiece() != null) {
+            board.addPiece(move.getEndPosition(), new ChessPiece(currentTurn, move.getPromotionPiece()));
+        } else {
+            board.addPiece(move.getEndPosition(), piece);
+        }
+        board.addPiece(move.getStartPosition(), null);
+        // Switch turns
+        currentTurn = (currentTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
+
 
     /**
      * Determines if the given team is in check
@@ -178,7 +195,5 @@ return validMoves;
                     ChessPosition position = new ChessPosition(row, col);
                     ChessPiece piece = current.getPiece(position);
                     copy.addPiece(position, piece);
-                }
-            }
-        } }
+                }}}}
 
