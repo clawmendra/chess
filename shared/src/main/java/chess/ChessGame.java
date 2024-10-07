@@ -172,11 +172,13 @@ return validMoves;
             return board;
         }
 
-        private void copyBoard(ChessBoard current, ChessBoard copy){
+        private void copyBoard(ChessBoard current, ChessBoard copy) {
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
                     ChessPosition position = new ChessPosition(row, col);
                     ChessPiece piece = current.getPiece(position);
                     copy.addPiece(position, piece);
-                }}}
+                }
+            }
+        } }
 
