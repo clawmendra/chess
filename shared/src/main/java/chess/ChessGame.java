@@ -193,11 +193,15 @@ return validMoves;
             return board;
         }
 
-        private void copyBoard(ChessBoard current, ChessBoard copy) {
+        private void copyBoard(ChessBoard currentBoard, ChessBoard copyBoard) {
             for (int row = 1; row <= 8; row++) {
                 for (int col = 1; col <= 8; col++) {
                     ChessPosition position = new ChessPosition(row, col);
-                    ChessPiece piece = current.getPiece(position);
-                    copy.addPiece(position, piece);
+                    ChessPiece piece = currentBoard.getPiece(position);
+                    // copy piece if it exists
+                    if (piece != null) {
+                        piece = new ChessPiece(piece.getTeamColor(), piece.getPieceType());
+                    }
+                    copyBoard.addPiece(position, piece);
                 }}}}
 
