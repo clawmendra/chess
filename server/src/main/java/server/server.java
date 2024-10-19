@@ -1,14 +1,14 @@
 package server;
-import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
+import dataAccess.DataAccess;
+import dataAccess.MemoryDataAccess;
 import handler.ClearHandler;
 import service.ClearService;
 import spark.*;
 
-public class Server {
+public class server {
     private final ClearHandler clearHandler;
 
-    public Server() {
+    public server() {
         DataAccess dataAccess = new MemoryDataAccess();
         ClearService clearService = new ClearService(dataAccess);
         this.clearHandler = new ClearHandler(clearService);
