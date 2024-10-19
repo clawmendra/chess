@@ -2,13 +2,13 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-
+import model.UserData;
+import model.AuthData;
 import java.util.UUID;
 
 
 public class RegisterService {
-    private final DataAccess.dataAccess;
-
+    private final DataAccess dataAccess;
     public RegisterService(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
     }

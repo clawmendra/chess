@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MemoryDataAccess implements DataAccess{
-    private final Map<String, Object> users = new HashMap<>();
+    private final Map<String, UserData> users = new HashMap<>();
     private final Map<String, AuthData> auths = new HashMap<>();
 
     @Override
@@ -22,10 +22,12 @@ public class MemoryDataAccess implements DataAccess{
         }
         users.put(user.username(), user);
     }
+
     @Override
     public UserData getUser(String username) {
         return users.get(username);
     }
+
     @Override
     public void createAuth(AuthData auth) {
         auths.put(auth.authToken(), auth);
