@@ -1,14 +1,15 @@
 package server;
-import dataAccess.DataAccess;
-import dataAccess.MemoryDataAccess;
+
+import dataaccess.DataAccess;
+import dataaccess.MemoryDataAccess;
 import handler.ClearHandler;
 import service.ClearService;
 import spark.*;
 
-public class server {
+public class Server {
     private final ClearHandler clearHandler;
 
-    public server() {
+    public Server() {
         DataAccess dataAccess = new MemoryDataAccess();
         ClearService clearService = new ClearService(dataAccess);
         this.clearHandler = new ClearHandler(clearService);
@@ -19,11 +20,11 @@ public class server {
         Spark.staticFiles.location("web");
 
         // Register your endpoints and handle exceptions here.
-        Spark.delete('/db', (req, res) -> clearHandler.handle(req,res));
+        Spark.delete("/db", clearHandler);
 
-       // Spark.exception(Exception.class, this::handleException);
+
 //      This line initializes the server and can be removed once you have a functioning endpoint
-//      Spark.init();
+        Spark.init();
         Spark.awaitInitialization();
         return Spark.port();
     }
