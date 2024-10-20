@@ -26,7 +26,6 @@ public class RegisterService {
         String authToken = UUID.randomUUID().toString();
         AuthData auth = new AuthData(authToken, username);
         dataAccess.createAuth(auth);
-
         return auth;
     }
 }
