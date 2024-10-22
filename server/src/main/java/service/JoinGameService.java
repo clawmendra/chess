@@ -11,20 +11,16 @@ public class JoinGameService {
         this.dataAccess = dataAccess;
     }
     public void joinGame(String authToken, ChessGame.TeamColor playerColor, int gameID) throws DataAccessException {
-        if (authToken == null) {
+        if (dataAccess.getAuth(authToken) == null) {
             throw new DataAccessException("Error: unauthorized");
         }
         AuthData auth = dataAccess.getAuth(authToken);
-        if (auth == null) {
-            throw new DataAccessException("Error: bad request");
-        }
         GameData game = dataAccess.getGame(gameID);
         if (game == null) {
             throw new DataAccessException("Error: bad request");
         }
 
         String username = auth.username();
-
         if (playerColor == null) {
             return;
         }

@@ -20,33 +20,23 @@ public class JoinGameHandler implements Route {
 
         try {
             JoinGameRequest joinRequest = new Gson().fromJson(request.body(), JoinGameRequest.class);
-            if (joinRequest.gameID == null) {
+            if (joinRequest.gameID == null || joinRequest.playerColor == null) {
                 response.status(400);
                 return new Gson().toJson(new ErrorResult("Error: bad request"));
             }
-
-            ChessGame.TeamColor playerColor = null;
-            if (joinRequest.playerColor != null) {
-                try {
-                    playerColor = ChessGame.TeamColor.valueOf(joinRequest.playerColor);
-                } catch (IllegalArgumentException e) {
-                    response.status(400);
-                    return new Gson().toJson(new ErrorResult("Error: bad request"));
-                }
-            }
-
+            ChessGame.TeamColor playerColor = ChessGame.TeamColor.valueOf(joinRequest.playerColor);
             joinGameService.joinGame(authToken, playerColor, joinRequest.gameID);
             response.status(200);
             return new Gson().toJson(new Result());
-        } catch (DataAccessException e) {
-            if (e.getMessage().equals("Error: unauthorized")) {
+        } catch (DataAccessException ex) {
+            if (ex.getMessage().equals("Error: unauthorized")) {
                 response.status(401);
                 return new Gson().toJson(new ErrorResult("Error: unauthorized"));
-            } else if (e.getMessage().equals("Error: already taken")) {
+            } else if (ex.getMessage().equals("Error: already taken")) {
                 response.status(403);
                 return new Gson().toJson(new ErrorResult("Error: already taken"));
             }
-            response.status(400);
+            response.status(500);
             return new Gson().toJson(new ErrorResult("Error: bad request"));
         }
     }
