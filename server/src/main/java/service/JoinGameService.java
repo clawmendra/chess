@@ -22,13 +22,14 @@ public class JoinGameService {
         if (game == null) {
             throw new DataAccessException("Error: bad request");
         }
+
         String username = auth.username();
-        GameData updateGame;
 
         if (playercolor == null) {
-            updateGame = game;
+            return;
         }
-        else if (playercolor == ChessGame.TeamColor.WHITE) {
+        GameData updateGame;
+        if (playercolor == ChessGame.TeamColor.WHITE) {
             if (game.whitePlayer() != null) {
                 throw new DataAccessException("Error: already taken");
             }
