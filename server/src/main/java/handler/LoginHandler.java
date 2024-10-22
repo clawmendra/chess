@@ -7,7 +7,7 @@ import spark.Response;
 import spark.Route;
 import model.AuthData;
 
-public class LoginHandler {
+public class LoginHandler implements Route {
     private final LoginService loginService;
     public LoginHandler(LoginService loginService) {
         this.loginService = loginService;
@@ -21,12 +21,12 @@ public class LoginHandler {
             AuthData authData = loginService.login(loginRequest.username, loginRequest.password);
             response.status(200);
             return gson.toJson(new LoginResult(authData.authToken(), authData.username()));
-        } catch (DataAccessException e) {
+        } catch (DataAccessException ex) {
             response.status(401);
             return gson.toJson(new ErrorResult("Error: unauthorized"));
-        } catch (Exception e) {
+        } catch (Exception ex) {
             response.status(500);
-            return gson.toJson(new ErrorResult("Error: " + e.getMessage()));
+            return gson.toJson(new ErrorResult("Error: " + ex.getMessage()));
         }
     }
 
