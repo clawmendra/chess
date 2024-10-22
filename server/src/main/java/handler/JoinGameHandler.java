@@ -54,8 +54,12 @@ public class JoinGameHandler implements Route {
     private static class JoinGameRequest {
         private String playerColor;
         private Integer gameID;
-        public String getPlayerColor() { return playerColor; }
-        public Integer getGameID() { return gameID; }
+        public String getPlayerColor() {
+            return playerColor;
+        }
+        public Integer getGameID() {
+            return gameID;
+        }
     }
     private static class Result {}
     private static class ErrorResult {
@@ -63,6 +67,8 @@ public class JoinGameHandler implements Route {
         public ErrorResult(String message) {
             this.message = message;
         }
-        public String getMessage() { return message; }
+        public String getMessage() {
+            return message;
+        }
     }
 }

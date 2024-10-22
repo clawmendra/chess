@@ -10,7 +10,7 @@ public class JoinGameService {
     public JoinGameService(DataAccess dataAccess) {
         this.dataAccess = dataAccess;
     }
-    public void joinGame(String authToken, ChessGame.TeamColor playercolor, int gameID) throws DataAccessException {
+    public void joinGame(String authToken, ChessGame.TeamColor playerColor, int gameID) throws DataAccessException {
         if (authToken == null) {
             throw new DataAccessException("Error: unauthorized");
         }
@@ -25,21 +25,21 @@ public class JoinGameService {
 
         String username = auth.username();
 
-        if (playercolor == null) {
+        if (playerColor == null) {
             return;
         }
         GameData updateGame;
-        if (playercolor == ChessGame.TeamColor.WHITE) {
-            if (game.whitePlayer() != null) {
+        if (playerColor == ChessGame.TeamColor.WHITE) {
+            if (game.whiteUsername() != null) {
                 throw new DataAccessException("Error: already taken");
             }
-            updateGame = new GameData(game.gameID(), username, game.blackPlayer(), game.gameName(), game.game());
+            updateGame = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
         }
         else {
-            if (game.blackPlayer() != null) {
+            if (game.blackUsername() != null) {
                 throw new DataAccessException("Error: already taken");
             }
-            updateGame = new GameData(game.gameID(), game.whitePlayer(), username, game.gameName(), game.game());
+            updateGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
         }
         dataAccess.updateGame(updateGame);
     }

@@ -34,16 +34,16 @@ class JoinGameServiceTest {
     void joinGame_White() throws DataAccessException {
         joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.WHITE, existGameID);
         GameData game = dataAccess.getGame(existGameID);
-        assertEquals("testUser", game.whitePlayer());
-        assertNull(game.blackPlayer());
+        assertEquals("testUser", game.whiteUsername());
+        assertNull(game.blackUsername());
     }
 
     @Test
     void joinGame_Black() throws DataAccessException  {
         joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.BLACK, existGameID);
         GameData game = dataAccess.getGame(existGameID);
-        assertNull(game.whitePlayer());
-        assertEquals("testUser", game.blackPlayer());
+        assertNull(game.whiteUsername());
+        assertEquals("testUser", game.blackUsername());
     }
 
     @Test

@@ -31,8 +31,8 @@ class CreateGameServiceTest {
         GameData game = dataAccess.getGame(gameID);
         assertNotNull(game);
         assertEquals(gameName, game.gameName());
-        assertNull(game.whitePlayer());
-        assertNull(game.blackPlayer());
+        assertNull(game.whiteUsername());
+        assertNull(game.blackUsername());
         assertNotNull(game.game());
     }
 
