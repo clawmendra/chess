@@ -60,4 +60,12 @@ public class MemoryDataAccess implements DataAccess{
     public GameData getGame(int gameID) throws DataAccessException {
         return games.get(gameID);
     }
+
+    @Override
+    public void updateGame(GameData game) throws DataAccessException {
+        if (!games.containsKey(game.gameID())) {
+            throw new DataAccessException("Error: bad request");
+        }
+        games.put(game.gameID(), game);
+    }
 }

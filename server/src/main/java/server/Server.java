@@ -1,20 +1,10 @@
 package server;
+import handler.*;
+import service.*;
 import spark.*;
 
 import dataaccess.DataAccess;
 import dataaccess.MemoryDataAccess;
-
-import handler.ClearHandler;
-import handler.RegisterHandler;
-import handler.LoginHandler;
-import handler.LogoutHandler;
-import handler.ListGamesHandler;
-
-import service.RegisterService;
-import service.ClearService;
-import service.LoginService;
-import service.LogoutService;
-import service.ListGamesService;
 
 public class Server {
     private final ClearHandler clearHandler;
@@ -22,6 +12,7 @@ public class Server {
     private final LoginHandler loginHandler;
     private final LogoutHandler logoutHandler;
     private final ListGamesHandler listGamesHandler;
+    private final CreateGameHandler createGameHandler;
 
     public Server() {
         DataAccess dataAccess = new MemoryDataAccess();
@@ -30,12 +21,14 @@ public class Server {
         LoginService loginService = new LoginService(dataAccess);
         LogoutService logoutService = new LogoutService(dataAccess);
         ListGamesService listGamesService = new ListGamesService(dataAccess);
+        CreateGameService createGameService = new CreateGameService(dataAccess);
 
         this.clearHandler = new ClearHandler(clearService);
         this.registerHandler = new RegisterHandler(registerService);
         this.loginHandler = new LoginHandler(loginService);
         this.logoutHandler = new LogoutHandler(logoutService);
         this.listGamesHandler = new ListGamesHandler(listGamesService);
+        this.createGameHandler = new CreateGameHandler(createGameService);
     }
 
     public int run(int desiredPort) {
@@ -48,6 +41,7 @@ public class Server {
         Spark.post("/session", loginHandler);
         Spark.delete("/session", logoutHandler);
         Spark.get("/game", listGamesHandler);
+        Spark.post("/game", createGameHandler);
 
         // This line initializes the server and can be removed once you have a functioning endpoint
         Spark.init();
