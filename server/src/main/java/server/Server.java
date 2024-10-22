@@ -13,6 +13,7 @@ public class Server {
     private final LogoutHandler logoutHandler;
     private final ListGamesHandler listGamesHandler;
     private final CreateGameHandler createGameHandler;
+    private final JoinGameHandler joinGameHandler;
 
     public Server() {
         DataAccess dataAccess = new MemoryDataAccess();
@@ -22,6 +23,7 @@ public class Server {
         LogoutService logoutService = new LogoutService(dataAccess);
         ListGamesService listGamesService = new ListGamesService(dataAccess);
         CreateGameService createGameService = new CreateGameService(dataAccess);
+        JoinGameService joinGameService = new JoinGameService(dataAccess);
 
         this.clearHandler = new ClearHandler(clearService);
         this.registerHandler = new RegisterHandler(registerService);
@@ -29,6 +31,7 @@ public class Server {
         this.logoutHandler = new LogoutHandler(logoutService);
         this.listGamesHandler = new ListGamesHandler(listGamesService);
         this.createGameHandler = new CreateGameHandler(createGameService);
+        this.joinGameHandler = new JoinGameHandler(joinGameService);
     }
 
     public int run(int desiredPort) {
@@ -42,6 +45,7 @@ public class Server {
         Spark.delete("/session", logoutHandler);
         Spark.get("/game", listGamesHandler);
         Spark.post("/game", createGameHandler);
+        Spark.put("/game", joinGameHandler);
 
         // This line initializes the server and can be removed once you have a functioning endpoint
         Spark.init();
