@@ -34,7 +34,7 @@ public class MemoryDataAccess implements DataAccess{
     }
 
     @Override
-    public void getAuth(String authToken) throws DataAccessException {
+    public AuthData getAuth(String authToken) throws DataAccessException {
         return auths.get(authToken);
     }
 
