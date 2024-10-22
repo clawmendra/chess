@@ -25,14 +25,14 @@ class ListGamesServiceTest {
     }
 
     @Test
-    void listGames_ListEmpty() throws DataAccessException {
+    void listEmpty() throws DataAccessException {
         GameData[] games = listGamesService.listGames(existAuthToken);
         assertNotNull(games);
         assertEquals(0, games.length);
     }
 
     @Test
-    void listGames_InvalidAuthToken() {
+    void invalidAuthToken() {
         String badAuthToken = "badAuthToken";
         DataAccessException exception = assertThrows(DataAccessException.class,
                 () -> listGamesService.listGames(badAuthToken));
@@ -40,7 +40,7 @@ class ListGamesServiceTest {
     }
 
     @Test
-    void listGames_NullAuthToken() {
+    void nullAuthToken() {
         // Act & Assert
         DataAccessException exception = assertThrows(DataAccessException.class,
                 () -> listGamesService.listGames(null));

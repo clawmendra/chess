@@ -25,12 +25,12 @@ class LogoutServiceTest {
         dataAccess.createAuth(new AuthData(existAuthToken, username));
     }
     @Test
-    void logout_GoodLogout() throws DataAccessException {
+    void goodLogout() throws DataAccessException {
         logoutService.logout(existAuthToken);
         assertNull(dataAccess.getAuth(existAuthToken));
     }
     @Test
-    void logout_BadAuthToken() {
+    void badAuthToken() {
         String badAuthToken = "badAuthToken";
         DataAccessException ex = assertThrows(DataAccessException.class,
                 () -> logoutService.logout(badAuthToken));
@@ -38,13 +38,13 @@ class LogoutServiceTest {
     }
 
     @Test
-    void logout_NullToken() {
+    void nullToken() {
         DataAccessException exception = assertThrows(DataAccessException.class,
                 () -> logoutService.logout(null));
         assertEquals("Error: unauthorized", exception.getMessage());
     }
     @Test
-    void logout_AuthTokeRemove() throws DataAccessException {
+    void authTokenRemove() throws DataAccessException {
        logoutService.logout(existAuthToken);
         assertThrows(DataAccessException.class, () -> logoutService.logout(existAuthToken));
     }

@@ -19,7 +19,7 @@ class LoginServiceTest {
     }
 
     @Test
-    void login_GoodLogin() throws DataAccessException {
+    void goodLogin() throws DataAccessException {
         String username = "testUser";
         String password = "testPassword";
         String email = "test@example.com";
@@ -31,14 +31,14 @@ class LoginServiceTest {
     }
 
     @Test
-    void login_InvalidUsername() {
+    void invalidUsername() {
         String username = "testUser";
         String password = "testPassword";
         assertThrows(DataAccessException.class, () -> loginService.login(username, password));
     }
 
     @Test
-    void login_InvalidPassword() throws DataAccessException {
+    void invalidPassword() throws DataAccessException {
         String username = "testUser";
         String correctPassword = "correctPassword";
         String wrongPassword = "wrongPassword";
@@ -48,7 +48,7 @@ class LoginServiceTest {
     }
 
     @Test
-    void login_NullPassword() {
+    void nullPassword() {
         String username = "testUser";
         assertThrows(DataAccessException.class, () -> loginService.login(username, null));
     }

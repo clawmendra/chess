@@ -18,7 +18,7 @@ class RegisterServiceTest {
     }
 
     @Test
-    void register_NormalRegistration() throws DataAccessException {
+    void goodRegistration() throws DataAccessException {
         AuthData result = registerService.register("newUser", "password123", "user@example.com");
 
         assertNotNull(result);
@@ -27,21 +27,21 @@ class RegisterServiceTest {
     }
 
     @Test
-    void register_NullUsername() {
+    void nullUsername() {
         assertThrows(DataAccessException.class, () ->
                 registerService.register(null, "password123", "user@example.com")
         );
     }
 
     @Test
-    void register_NullPassword() {
+    void nullPassword() {
         assertThrows(DataAccessException.class, () ->
                 registerService.register("newUser", null, "user@example.com")
         );
     }
 
     @Test
-    void register_NullEmail() {
+    void nullEmail() {
         assertThrows(DataAccessException.class, () ->
                 registerService.register("newUser", "password123", null)
         );

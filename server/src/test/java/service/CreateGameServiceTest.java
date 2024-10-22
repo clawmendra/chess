@@ -25,7 +25,7 @@ class CreateGameServiceTest {
     }
 
     @Test
-    void createGame_Works() throws DataAccessException {
+    void gameWorks() throws DataAccessException {
         String gameName = "testGame";
         int gameID = createGameService.createGame(existAuthToken, gameName);
         GameData game = dataAccess.getGame(gameID);
@@ -37,14 +37,14 @@ class CreateGameServiceTest {
     }
 
     @Test
-    void createGame_NullGame() {
+    void nullGame() {
         DataAccessException exception = assertThrows(DataAccessException.class,
                 () -> createGameService.createGame(existAuthToken, null));
         assertEquals("Error: bad request", exception.getMessage());
     }
 
     @Test
-    void createGame_BadAuthToken() {
+    void badAuthToken() {
         String badAuthToken = "badToken";
         String gameName = "testGame";
         DataAccessException exception = assertThrows(DataAccessException.class,
@@ -53,7 +53,7 @@ class CreateGameServiceTest {
     }
 
     @Test
-    void createGame_GameID() throws DataAccessException {
+    void gameId() throws DataAccessException {
         String gameName1 = "Game 1";
         String gameName2 = "Game 2";
         int gameID1 = createGameService.createGame(existAuthToken, gameName1);

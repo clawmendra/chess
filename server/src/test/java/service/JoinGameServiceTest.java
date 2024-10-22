@@ -31,7 +31,7 @@ class JoinGameServiceTest {
     }
 
     @Test
-    void joinGame_White() throws DataAccessException {
+    void whiteUser() throws DataAccessException {
         joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.WHITE, existGameID);
         GameData game = dataAccess.getGame(existGameID);
         assertEquals("testUser", game.whiteUsername());
@@ -39,7 +39,7 @@ class JoinGameServiceTest {
     }
 
     @Test
-    void joinGame_Black() throws DataAccessException  {
+    void blackUser() throws DataAccessException  {
         joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.BLACK, existGameID);
         GameData game = dataAccess.getGame(existGameID);
         assertNull(game.whiteUsername());
@@ -47,27 +47,27 @@ class JoinGameServiceTest {
     }
 
     @Test
-    void joinGame_NullAuthToken() {
+    void nullAuthToken() {
         assertThrows(DataAccessException.class,
                 () -> joinGameService.joinGame(null, ChessGame.TeamColor.WHITE, existGameID));
     }
 
     @Test
-    void joinGame_BadToken() {
+    void badToken() {
         String badAuthToken = "badAuthToken";
         assertThrows(DataAccessException.class,
                 () -> joinGameService.joinGame(badAuthToken, ChessGame.TeamColor.WHITE, existGameID));
     }
 
     @Test
-    void joinGame_BadGameId() {
+    void badGameId() {
         int badGameID = -1201;
         assertThrows(DataAccessException.class,
                 () -> joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.WHITE, badGameID));
     }
 
     @Test
-    void joinGame_ColorTaken() throws DataAccessException {
+    void colorTaken() throws DataAccessException {
         joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.WHITE, existGameID);
         String AuthToken2 = "AuthToken2";
         dataAccess.createAuth(new AuthData(AuthToken2, "secondPlayer"));
