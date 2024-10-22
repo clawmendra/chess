@@ -69,10 +69,10 @@ class JoinGameServiceTest {
     @Test
     void colorTaken() throws DataAccessException {
         joinGameService.joinGame(existAuthToken, ChessGame.TeamColor.WHITE, existGameID);
-        String AuthToken2 = "AuthToken2";
-        dataAccess.createAuth(new AuthData(AuthToken2, "secondPlayer"));
+        String authToken2 = "authToken2";
+        dataAccess.createAuth(new AuthData(authToken2, "secondPlayer"));
         DataAccessException exception = assertThrows(DataAccessException.class,
-                () -> joinGameService.joinGame(AuthToken2, ChessGame.TeamColor.WHITE, existGameID));
+                () -> joinGameService.joinGame(authToken2, ChessGame.TeamColor.WHITE, existGameID));
         assertEquals("Error: already taken", exception.getMessage());
     }
 }
