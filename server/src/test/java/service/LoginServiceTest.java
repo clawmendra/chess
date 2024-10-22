@@ -11,9 +11,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class LoginServiceTest {
     private LoginService loginService;
     private DataAccess dataAccess;
+
     @BeforeEach
     void setUp() {
-        DataAccess dataAccess = new MemoryDataAccess();
+        dataAccess = new MemoryDataAccess();
         loginService = new LoginService(dataAccess);
     }
 
@@ -21,6 +22,7 @@ class LoginServiceTest {
     void login_GoodLogin() throws DataAccessException {
         String username = "testUser";
         String password = "testPassword";
+        String email = "test@example.com";
         dataAccess.createUser(new UserData(username, password, email));
         AuthData result = loginService.login(username, password);
         assertNotNull(result);
