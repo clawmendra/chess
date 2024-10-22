@@ -124,8 +124,9 @@ public class ChessGame {
                     kingPos= position;
                     break;
                 }}
-            if (kingPos != null)
+            if (kingPos != null) {
                 break;
+            }
         }
         // no king is found--error
         if (kingPos == null) {
@@ -234,8 +235,12 @@ public class ChessGame {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ChessGame chessGame = (ChessGame) o;
         return Objects.equals(board, chessGame.board) && currentTurn == chessGame.currentTurn;
     }
