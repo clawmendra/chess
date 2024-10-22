@@ -239,10 +239,11 @@ public class ChessPiece {
             ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
             if (newPiece != null) {
                 if (this.getTeamColor() != newPiece.getTeamColor() && row == 8) {
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.QUEEN));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.ROOK));
                     posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.KNIGHT));
                     posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.BISHOP));
+                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.QUEEN));
+                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.ROOK));
+
                 }
                 else if (this.getTeamColor() != newPiece.getTeamColor()) {
                     posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), null));
