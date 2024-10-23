@@ -194,14 +194,19 @@ public class ChessPiece {
             ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
             if (newPiece != null) {
                 if (this.getTeamColor() != newPiece.getTeamColor() && row == 1) {
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.QUEEN));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.ROOK));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.KNIGHT));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.BISHOP));
+                    addPromotePos(board, myPos, posMoves, row, col);
                 }
                 else if (this.getTeamColor() != newPiece.getTeamColor()) {
                     posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), null));
                 }}}}
+
+    private void addPromotePos(ChessBoard board, ChessPosition myPos, Collection<ChessMove> posMoves, int row, int col) {
+        posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.QUEEN));
+        posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.ROOK));
+        posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.KNIGHT));
+        posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.BISHOP));
+    }
+
 
     private void defaultBlack(ChessBoard board, ChessPosition myPos, Collection<ChessMove> posMoves, int row, int col) {
         ChessPiece newPiece = board.getPiece(new ChessPosition(row - 1, col));
@@ -239,11 +244,7 @@ public class ChessPiece {
             ChessPiece newPiece = board.getPiece(new ChessPosition(row, col));
             if (newPiece != null) {
                 if (this.getTeamColor() != newPiece.getTeamColor() && row == 8) {
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.KNIGHT));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.BISHOP));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.QUEEN));
-                    posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), PieceType.ROOK));
-
+                    addPromotePos(board, myPos, posMoves, row, col);
                 }
                 else if (this.getTeamColor() != newPiece.getTeamColor()) {
                     posMoves.add(new ChessMove(myPos, new ChessPosition(row, col), null));
