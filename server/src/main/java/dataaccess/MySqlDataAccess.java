@@ -87,6 +87,11 @@ public class MySqlDataAccess implements DataAccess {
         return null;
     }
 
+    public void deleteAuth(String authToken) throws DataAccessException {
+        var statement = "DELETE FROM auth_tokens WHERE auth_token=?";
+        executeUpdate(statement, authToken);
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
