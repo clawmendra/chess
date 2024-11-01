@@ -121,6 +121,13 @@ public class MySqlDataAccess implements DataAccess {
         );
     }
 
+    public void createGame(GameData gameName) throws DataAccessException {
+        var statement = "INSERT INTO games(game_name, game_state) VALUES (?, ?)";
+        var game = new ChessGame();
+        var json = gson.toJson(game);
+        executeUpdate(statement, gameName, json);
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
