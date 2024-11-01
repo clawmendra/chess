@@ -146,8 +146,12 @@ public class MySqlDataAccessTests {
         boolean foundGame1 = false;
         boolean foundGame2 = false;
         for (GameData game : games) {
-            if (game.gameName().equals("game1")) foundGame1 = true;
-            if (game.gameName().equals("game2")) foundGame2 = true;
+            if (game.gameName().equals("game1")) {
+                foundGame1 = true;
+            }
+            if (game.gameName().equals("game2")) {
+                foundGame2 = true;
+            }
         }
         assertTrue(foundGame1 && foundGame2);
     }
