@@ -6,7 +6,7 @@ import model.GameData;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MySqlClearTests {
+public class ClearTests {
     private static DataAccess dataAccess;
 
     @BeforeAll
