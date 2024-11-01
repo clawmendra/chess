@@ -26,14 +26,15 @@ public class MySqlDataAccessTests {
         // Create some test data
         UserData user = new UserData("testUser", "password", "test@email.com");
         dataAccess.createUser(user);
-        dataAccess.createGame(new GameData(1, null, null, "testGame", new ChessGame()));
+        GameData game = new GameData(1, null, null, "testGame", new ChessGame());
+        dataAccess.createGame(game);
 
         // Clear the database
         dataAccess.clear();
 
         // Verify everything is cleared
         assertNull(dataAccess.getUser("testUser"));
-        assertEquals(0, dataAccess.listGames().length);
+        assertNull(dataAccess.getGame(1));
     }
 
     @Test
