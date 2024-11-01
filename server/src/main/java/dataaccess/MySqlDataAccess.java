@@ -60,6 +60,13 @@ public class MySqlDataAccess implements DataAccess {
         return null;
     }
 
+    public AuthData createAuth(String username) throws DataAccessException {
+        var statement = "INSERT INTO auth_tokens (auth_token, username) VALUES (?, ?)";
+        var authToken = UUID.randomUUID().toString();
+        executeUpdate(statement, authToken, username);
+        return new AuthData(authToken, username);
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
