@@ -131,7 +131,7 @@ public class MySqlDataAccess implements DataAccess {
     public GameData getGame(int gameID) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT game_id, white_username, black_username, game_name, game_state " +
-                    "FROM game WHERE game_id=?";
+                    "FROM games WHERE game_id=?";
             try (var ps = conn.prepareStatement(statement)) {
                 ps.setInt(1, gameID);
                 try (var rs = ps.executeQuery()) {
@@ -144,6 +144,12 @@ public class MySqlDataAccess implements DataAccess {
             throw new DataAccessException(String.format("Unable to read game: %s", e.getMessage()));
         }
         return null;
+    }
+
+    public void updateGame(GameData game) throws DataAccessException {
+        var statement = "UPDATE games SET white_username=?, black_username=?, game_state=?, WHERE game_id=?";
+        var json = gson.toJson(game.game());
+        executeUpdate(statement, game.whiteUsername(), game.blackUsername(), json, game.gameID());
     }
 
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
