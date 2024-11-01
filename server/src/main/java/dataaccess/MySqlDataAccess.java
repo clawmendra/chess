@@ -92,6 +92,35 @@ public class MySqlDataAccess implements DataAccess {
         executeUpdate(statement, authToken);
     }
 
+    public GameData[] listGames() throws DataAccessException {
+        var games = new ArrayList<GameData>();
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT game_id, white_username, black_username, game_name, game_state FROM games";
+            try (var ps = conn.prepareStatement(statement)) {
+                try (var rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        games.add(readGame(rs));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException(String.format("Unable to read games: %s", e.getMessage()));
+        }
+        return games.toArray(new GameData[0]);
+    }
+
+    private GameData readGame(ResultSet rs) throws SQLException {
+        var gameState = rs.getString("game_state");
+        var game = gson.fromJson(gameState, ChessGame.class);
+        return new GameData(
+                rs.getInt("game_id"),
+                rs.getString("white_username"),
+                rs.getString("black_username"),
+                rs.getString("game_name"),
+                game
+        );
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
