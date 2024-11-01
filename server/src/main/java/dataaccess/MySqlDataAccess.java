@@ -1,8 +1,18 @@
 package dataaccess;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
-import java.sql.SQLException;
+import chess.ChessGame;
+import com.google.gson.Gson;
+import model.AuthData;
+import model.GameData;
+import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.UUID;
+
+import static java.sql.Statement.RETURN_GENERATED_KEYS;
+import static java.sql.Types.NULL;
 
 public class MySqlDataAccess implements DataAccess {
     private final Gson gson;
@@ -13,7 +23,7 @@ public class MySqlDataAccess implements DataAccess {
     }
 
     public void clear() throws DataAccessException {
-        var statement = new String[] {
+        var statements = new String[] {
                 "TRUNCATE auth_tokens",
                 "TRUNCATE games",
                 "TRUNCATE users"
@@ -22,6 +32,12 @@ public class MySqlDataAccess implements DataAccess {
         executeUpdate(statement);
      }
 }
+
+    public void createUser(UserData user) throws DataAccessException {
+        var statement = "INSERT INTO users(username, password, email) VALUES (?, ?, ?)";
+        var hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        executeUpdate(statement, user.username(), hashedPassword, user.email());
+    }
     private int executeUpdate(String statement, Object... params) throws ResponseException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
@@ -41,6 +57,19 @@ public class MySqlDataAccess implements DataAccess {
             }
         } catch (SQLException e) {
             throw new ResponseException(500, String.format("unable to update database: %s, %s", statement, e.getMessage()));
+        }
+    }
+
+    private void configureDatabase() throws ResponseException {
+        DatabaseManager.createDatabase();
+        try (var conn = DatabaseManager.getConnection()) {
+            for (var statement : createStatements) {
+                try (var preparedStatement = conn.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            throw new ResponseException(500, String.format("Unable to configure database: %s", ex.getMessage()));
         }
     }
 
