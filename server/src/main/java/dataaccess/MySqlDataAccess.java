@@ -32,13 +32,13 @@ public class MySqlDataAccess implements DataAccess {
         executeUpdate(statement);
      }
 }
-
+    @Override
     public void createUser(UserData user) throws DataAccessException {
         var statement = "INSERT INTO users(username, password, email) VALUES (?, ?, ?)";
         var hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
         executeUpdate(statement, user.username(), hashedPassword, user.email());
     }
-
+    @Override
     public UserData getUser(String username) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT username, password, email FROM user WHERE username=?";
@@ -60,13 +60,14 @@ public class MySqlDataAccess implements DataAccess {
         return null;
     }
 
-    public AuthData createAuth(String username) throws DataAccessException {
+    @Override
+    public void createAuth(AuthData auth) throws DataAccessException {
         var statement = "INSERT INTO auth_tokens (auth_token, username) VALUES (?, ?)";
         var authToken = UUID.randomUUID().toString();
-        executeUpdate(statement, authToken, username);
-        return new AuthData(authToken, username);
+        executeUpdate(statement, authToken, auth);
     }
 
+    @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT auth_token, username FROM auth_tokens WHERE auth_token=?";
@@ -87,11 +88,13 @@ public class MySqlDataAccess implements DataAccess {
         return null;
     }
 
+    @Override
     public void deleteAuth(String authToken) throws DataAccessException {
         var statement = "DELETE FROM auth_tokens WHERE auth_token=?";
         executeUpdate(statement, authToken);
     }
 
+    @Override
     public GameData[] listGames() throws DataAccessException {
         var games = new ArrayList<GameData>();
         try (var conn = DatabaseManager.getConnection()) {
@@ -109,6 +112,7 @@ public class MySqlDataAccess implements DataAccess {
         return games.toArray(new GameData[0]);
     }
 
+    // helper function
     private GameData readGame(ResultSet rs) throws SQLException {
         var gameState = rs.getString("game_state");
         var game = gson.fromJson(gameState, ChessGame.class);
@@ -120,7 +124,7 @@ public class MySqlDataAccess implements DataAccess {
                 game
         );
     }
-
+    @Override
     public void createGame(GameData gameName) throws DataAccessException {
         var statement = "INSERT INTO games(game_name, game_state) VALUES (?, ?)";
         var game = new ChessGame();
@@ -128,6 +132,7 @@ public class MySqlDataAccess implements DataAccess {
         executeUpdate(statement, gameName, json);
     }
 
+    @Override
     public GameData getGame(int gameID) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             var statement = "SELECT game_id, white_username, black_username, game_name, game_state " +
@@ -146,12 +151,14 @@ public class MySqlDataAccess implements DataAccess {
         return null;
     }
 
+    @Override
     public void updateGame(GameData game) throws DataAccessException {
         var statement = "UPDATE games SET white_username=?, black_username=?, game_state=?, WHERE game_id=?";
         var json = gson.toJson(game.game());
         executeUpdate(statement, game.whiteUsername(), game.blackUsername(), json, game.gameID());
     }
 
+    // helper function
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
