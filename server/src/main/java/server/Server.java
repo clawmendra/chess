@@ -1,10 +1,12 @@
 package server;
+import dataaccess.DataAccessException;
 import handler.*;
 import service.*;
 import spark.*;
 
 import dataaccess.DataAccess;
-import dataaccess.MemoryDataAccess;
+//import dataaccess.MemoryDataAccess;
+import dataaccess.MySqlDataAccess;
 
 public class Server {
     private final ClearHandler clearHandler;
@@ -16,7 +18,13 @@ public class Server {
     private final JoinGameHandler joinGameHandler;
 
     public Server() {
-        DataAccess dataAccess = new MemoryDataAccess();
+        //DataAccess dataAccess = new MemoryDataAccess();
+        DataAccess dataAccess;
+        try {
+            dataAccess = new MySqlDataAccess();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Unable to create MySQL Data Access: " + e.getMessage());
+        }
         ClearService clearService = new ClearService(dataAccess);
         RegisterService registerService = new RegisterService(dataAccess);
         LoginService loginService = new LoginService(dataAccess);
