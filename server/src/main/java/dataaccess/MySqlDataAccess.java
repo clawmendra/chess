@@ -39,6 +39,27 @@ public class MySqlDataAccess implements DataAccess {
         executeUpdate(statement, user.username(), hashedPassword, user.email());
     }
 
+    public UserData getUser(String username) throws DataAccessException {
+        try (var conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT username, password, email FROM user WHERE username=?";
+            try (var ps = conn.prepareStatement(statement)) {
+                ps.setString(1, username);
+                try (var rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new UserData(
+                                rs.getString("username"),
+                                rs.getString("password"),
+                                rs.getString("email")
+                        );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
+        }
+        return null;
+    }
+
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
