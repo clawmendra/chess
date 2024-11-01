@@ -38,7 +38,8 @@ public class MySqlDataAccess implements DataAccess {
         var hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
         executeUpdate(statement, user.username(), hashedPassword, user.email());
     }
-    private int executeUpdate(String statement, Object... params) throws ResponseException {
+
+    private int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (var i = 0; i < params.length; i++) {
@@ -56,20 +57,46 @@ public class MySqlDataAccess implements DataAccess {
                 return 0;
             }
         } catch (SQLException e) {
-            throw new ResponseException(500, String.format("unable to update database: %s, %s", statement, e.getMessage()));
+            throw new DataAccessException(String.format("unable to update database: %s, %s", statement, e.getMessage()));
         }
     }
 
-    private void configureDatabase() throws ResponseException {
+    private final String[] createStatements = {
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                username VARCHAR(255) PRIMARY KEY,
+                password VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL
+                )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS auth_tokens (
+                auth_token VARCHAR(255) PRIMARY KEY,
+                username VARCHAR(255) NOT NULL
+                )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS games (
+                game_id INT NOT NULL AUTO_INCREMENT,
+                game_name VARCHAR(255) NOT NULL,
+                white_username VARCHAR(255),
+                black_username VARCHAR(255),
+                game_state TEXT NOT NULL,
+                PRIMARY KEY (game_id),
+                )
+            """
+    };
+
+    private void configureDatabase() throws DataAccessException {
         DatabaseManager.createDatabase();
         try (var conn = DatabaseManager.getConnection()) {
             for (var statement : createStatements) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
+                try (var ps = conn.prepareStatement(statement)) {
+                    ps.executeUpdate();
                 }
             }
         } catch (SQLException ex) {
-            throw new ResponseException(500, String.format("Unable to configure database: %s", ex.getMessage()));
+            throw new DataAccessException(String.format("Unable to configure database: %s", ex.getMessage()));
         }
     }
 
