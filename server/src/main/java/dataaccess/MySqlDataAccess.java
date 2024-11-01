@@ -72,22 +72,17 @@ public class MySqlDataAccess implements DataAccess {
         return null;
     }
 
+
+
     @Override
     public void createAuth(AuthData auth) throws DataAccessException {
         // First check if user exists
-        try (var conn = DatabaseManager.getConnection()) {
-            // Check if user exists
-            var checkUserSQL = "SELECT username FROM users WHERE username = ?";
-            try (var ps = conn.prepareStatement(checkUserSQL)) {
-                ps.setString(1, auth.username());
-                var rs = ps.executeQuery();
-                if (!rs.next()) {
-                    throw new DataAccessException("User does not exist");
-                }
-            }
+        if (getUser(auth.username()) == null) {
+            throw new DataAccessException("User doesn't exist");
+        }
 
-            // create auth token
-            var statement = "INSERT INTO auth_tokens (auth_token, username) VALUES (?, ?)";
+        var statement = "INSERT INTO auth_tokens (auth_token, username) VALUES (?, ?)";
+        try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement)) {
                 ps.setString(1, auth.authToken());
                 ps.setString(2, auth.username());
@@ -113,8 +108,8 @@ public class MySqlDataAccess implements DataAccess {
                     }
                 }
             }
-        } catch (Exception e) {
-            throw new DataAccessException(String.format("Unable to read auth token: %s", e.getMessage()));
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to read data: %s", e.getMessage()));
         }
         return null;
     }
@@ -122,7 +117,14 @@ public class MySqlDataAccess implements DataAccess {
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
         var statement = "DELETE FROM auth_tokens WHERE auth_token=?";
-        executeUpdate(statement, authToken);
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var ps = conn.prepareStatement(statement)) {
+                ps.setString(1, authToken);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("unable to update database: %s", e.getMessage()));
+        }
     }
 
     @Override
