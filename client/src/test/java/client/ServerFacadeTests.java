@@ -1,8 +1,5 @@
 package client;
 
-import exception.ResponseException;
-import model.AuthData;
-import model.GameData;
 import org.junit.jupiter.api.*;
 import server.Server;
 import static org.junit.jupiter.api.Assertions.*;
