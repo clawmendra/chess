@@ -17,21 +17,21 @@ public class ServerFacade {
         serverUrl = url;
     }
 
-    public AuthData register(String username, String password, String email) throws ResponseException {
+    public AuthData register(String username, String password, String email) throws Exception {
         var path = "/user";
         var request = new UserData(username, password, email);
         return this.makeRequest("POST", path, request, AuthData.class);
     }
 
-    public AuthData login(String username, String password) throws ResponseException {
+    public AuthData login(String username, String password) throws Exception {
         var path = "/session";
         var request = new UserData(username, password, null);
         return this.makeRequest("POST", path, request, AuthData.class);
     }
 
-    public void logout(String authToken) throws ResponseException {
+    public void logout(String authToken) throws Exception {
         var path = "/session";
-        this.makeRequest("DELETE", path, null, null);
+        this.makeRequest("DELETE", path, null, null, authToken);
     }
 
     public GameData[] listGames(String authToken) throws Exception {
@@ -41,21 +41,31 @@ public class ServerFacade {
         return response.games();
     }
 
-    public <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws ResponseException {
+    public <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws Exception {
         try {
             URL url = (new URI(serverUrl + path)).toURL();
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method);
             http.setDoOutput(true);
 
+            if (authToken != null) {
+                http.addRequestProperty("Authorization", authToken);
+            }
+
             writeBody(request, http);
             http.connect();
             throwIfNotSuccessful(http);
             return readBody(http, responseClass);
         } catch (Exception ex) {
-            throw new ResponseException(500, ex.getMessage());
+            throw new Exception(ex.getMessage());
         }
     }
+
+    public <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws Exception {
+        return makeRequest(method, path, request, responseClass, null);
+    }
+
+
 
     private static void writeBody(Object request, HttpURLConnection http) throws IOException {
         if (request != null) {
