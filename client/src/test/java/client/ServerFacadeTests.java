@@ -37,6 +37,12 @@ public class ServerFacadeTests {
     }
 
     @Test
+    void registerNegative() throws Exception {
+        facade.register("player1", "password", "test@byu.edu");
+        assertThrows(Exception.class, () -> facade.register("player1", "password", "test@byu.edu"));
+    }
+
+    @Test
     public void sampleTest() {
         Assertions.assertTrue(true);
     }
