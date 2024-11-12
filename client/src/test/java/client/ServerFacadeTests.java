@@ -81,4 +81,17 @@ public class ServerFacadeTests {
                 facade.listGames("invalidAuthToken")
         );
     }
+
+    @Test
+    void joinGamePositive() throws Exception {
+        var authData = facade.register("player1", "password", "test@byu.edu");
+        var gameData = facade.createGame("testGame", authData.authToken());
+        assertDoesNotThrow(() -> facade.joinGame(gameData.gameID(), "WHITE", authData.authToken()));
+    }
+
+    @Test
+    void joinGameNegative() throws Exception {
+        var authData = facade.register("player1", "password", "test@byu.edu");
+        assertThrows(Exception.class, () -> facade.joinGame(-123, "WHITE", authData.authToken()));
+    }
 }

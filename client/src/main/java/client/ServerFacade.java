@@ -48,6 +48,13 @@ public class ServerFacade {
         return this.makeRequest("POST", path, request, GameData.class, authToken);
     }
 
+    public void joinGame(int gameID, String playerColor, String authToken) throws Exception {
+        var path = "/game";
+        record JoinGameRequest(String playerColor, int gameID) {}
+        var request = new JoinGameRequest(playerColor, gameID);
+        this.makeRequest("PUT", path, request, null, authToken);
+    }
+
     public <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws Exception {
         try {
             URL url = (new URI(serverUrl + path)).toURL();
