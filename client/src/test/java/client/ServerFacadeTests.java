@@ -59,7 +59,6 @@ public class ServerFacadeTests {
     void logoutPositive() throws Exception {
         var authData = facade.register("player1", "password", "test@byu.edu");
         assertDoesNotThrow(() -> facade.logout(authData.authToken()));
-//        assertThrows(Exception.class, () -> facade.listGames(authData.authToken()));
     }
 
     @Test
@@ -68,8 +67,18 @@ public class ServerFacadeTests {
     }
 
     @Test
-    public void sampleTest() {
-        Assertions.assertTrue(true);
+    void listGamesPositive() throws Exception {
+        var authData = facade.register("player1", "password", "test@byu.edu");
+        facade.createGame("testGame", authData.authToken());
+        var games = facade.listGames(authData.authToken());
+        assertNotNull(games);
+        assertEquals(1, games.length);
     }
 
+    @Test
+    void listGamesNegative() throws Exception {
+        assertThrows(Exception.class, () ->
+                facade.listGames("invalidAuthToken")
+        );
+    }
 }
