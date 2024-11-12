@@ -3,6 +3,7 @@ package client;
 import com.google.gson.Gson;
 import exception.ResponseException;
 import model.AuthData;
+import model.GameData;
 import model.UserData;
 
 import java.io.*;
@@ -26,6 +27,18 @@ public class ServerFacade {
         var path = "/session";
         var request = new UserData(username, password, null);
         return this.makeRequest("POST", path, request, AuthData.class);
+    }
+
+    public void logout(String authToken) throws ResponseException {
+        var path = "/session";
+        this.makeRequest("DELETE", path, null, null);
+    }
+
+    public GameData[] listGames(String authToken) throws Exception {
+        var path = "/game";
+        record listGamesResponse(GameData[] games) {}
+        var response = this.makeRequest("GET", path, null, listGamesResponse.class);
+        return response.games();
     }
 
     public <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws ResponseException {
