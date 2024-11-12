@@ -11,11 +11,9 @@ import java.net.*;
 
 public class ServerFacade {
     private final String serverUrl;
-    private final Gson gson;
 
     public ServerFacade(String url) {
         serverUrl = url;
-        gson = new Gson();
     }
 
     public AuthData register(String username, String password, String email) throws Exception {
