@@ -8,15 +8,16 @@ import java.util.Scanner;
 // Help, Logout, Create Game, List Games, Play Game, Observe Game
 public class PostLogin {
     private static GameData[] gamesList = null;
+
     public static void help2() {
         System.out.println("""
-               create - a game
-               list - games
-               play - a game
-               observe - a game
-               logout - when you are done
-               quit - playing chess
-               help - with possible commands""");
+                create - a game
+                list - games
+                play - a game
+                observe - a game
+                logout - when you are done
+                quit - playing chess
+                help - with possible commands""");
     }
 
     public static void logout(ServerFacade server, String authToken) throws Exception {
@@ -84,17 +85,27 @@ public class PostLogin {
         GamePlay.displayChessBoard(whiteView);
     }
 
-    public static void observeGame(ServerFacade server,String authToken, Scanner scanner) throws Exception {
+    public static void observeGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
         if (gamesList == null) {
             System.out.println("Sorry, no available games to observe");
             return;
         }
         System.out.print("Enter game number you want to observe: ");
-        int gameNum = Integer.parseInt(scanner.nextLine());
-        if (gameNum < 1 || gameNum > gamesList.length) {
-            throw new Exception("Invalid game number");
+        int gameNum;
+        try {
+            gameNum = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid game number. Please enter a valid number.");
+            return;
         }
+
+        if (gameNum < 1 || gameNum > gamesList.length) {
+            System.out.println("Invalid game number. Please enter a number within the range of available games.");
+            return;
+        }
+
         GameData gamePicked = gamesList[gameNum - 1];
+
         try {
             server.joinGame(gamePicked.gameID(), null, authToken);
             System.out.println("Successfully joined game as an observer");
@@ -103,7 +114,9 @@ public class PostLogin {
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
             if (e.getMessage().contains("failure: 400")) {
-                System.out.println("The server rejected the request to join the game. This could be due to an issue with the game ID or your authorization token.");
+                System.out.println("The game could not be joined. This may be due to an issue with the game ID or your authorization token. Please try again later.");
+            } else if (e.getMessage().contains("failure: 403")) {
+                System.out.println("You are not authorized to join this game as an observer. Please try a different game.");
             } else {
                 System.out.println("An unexpected error occurred while trying to join the game. Please try again later.");
             }
@@ -113,4 +126,4 @@ public class PostLogin {
     public static void quit2() {
         System.exit(0);
     }
-    }
+}
