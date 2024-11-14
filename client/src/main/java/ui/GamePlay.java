@@ -3,12 +3,12 @@ package ui;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import static ui.EscapeSequences.*;
-
+import model.GameData;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
 
-    public static void displayChessBoard(boolean whiteView) {
+    public static void displayChessBoard(boolean whiteView, GameData gameData) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.print(ERASE_SCREEN);
         var board = new chess.ChessBoard();

@@ -19,18 +19,16 @@ public class PreLogin {
     }
 
     public static AuthData login(ServerFacade server, Scanner scanner) throws Exception {
-        while (true) {
             System.out.print("Username: ");
             String username = scanner.nextLine();
             System.out.print("Password: ");
             String password = scanner.nextLine();
-
             try {
                 return server.login(username, password);
             } catch (Exception e) {
-                System.out.println("Invalid username or password. Please try again.");
+                System.out.println("Invalid username or password.");
+                return null;
             }
-        }
     }
 
     public static AuthData register(ServerFacade server, Scanner scanner) throws Exception {

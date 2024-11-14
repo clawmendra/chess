@@ -92,11 +92,11 @@ public class PostLogin {
         game.getBoard().resetBoard();
 
         boolean whiteView = color.equals("WHITE");
-        GamePlay.displayChessBoard(whiteView);
+        GamePlay.displayChessBoard(whiteView, selectedGame);
     }
 
     public static void observeGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
-        if (gamesList == null) {
+        if (gamesList == null || gamesList.length == 0) {
             System.out.println("Sorry, no available games to observe");
             return;
         }
@@ -114,8 +114,7 @@ public class PostLogin {
             return;
         }
         GameData gamePicked = gamesList[gameNum - 1];
-        // pass game data and boolean
-        GamePlay.displayChessBoard(true);
+        GamePlay.displayChessBoard(true, gamePicked);
     }
 
     public static void quit2() {

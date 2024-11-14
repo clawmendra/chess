@@ -47,8 +47,10 @@ public class ChessClient {
             case "quit" -> quit();
             case "login" -> {
                 authData = login(server, scanner);
-                state = State.LOGGED_IN;
-                System.out.println("Login successful! Type 'help' to see available commands.");
+                if (authData != null) {
+                    state = State.LOGGED_IN;
+                    System.out.println("Login successful! Type 'help' to see available commands.");
+                }
             }
             case "register" -> {
                 authData = register(server, scanner);
