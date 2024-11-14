@@ -2,6 +2,7 @@ package client;
 
 import model.AuthData;
 import static ui.PreLogin.*;
+import static ui.PostLogin.*;
 import java.util.Scanner;
 
 public class ChessClient {
@@ -27,8 +28,7 @@ public class ChessClient {
                 if (state == State.LOGGED_OUT) {
                     doPreLogin(line);
                 } else {
-                    // doPostLogin(line);
-                    return;
+                    doPostLogin(line);
                 }
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
@@ -50,6 +50,22 @@ public class ChessClient {
                 state = State.LOGGED_IN;
                 System.out.println("Registration successful. Type 'help' to see available commands.");
             }
+            default -> System.out.println("Unknown command. Type 'help' to see available commands.");
+        }
+    }
+
+    private void doPostLogin(String line) throws Exception {
+        switch(line.toLowerCase()) {
+            case "help" -> help();
+            case "logout" -> {
+                logout(server, authData.authToken());
+                state = State.LOGGED_OUT;
+                authData = null;
+                System.out.println("Logout successful. Type 'help' to see available commands.");
+            }
+            case "create" -> createGame(server, authData.authToken(), scanner);
+            case "list" -> listGames(server, authData.authToken());
+            case "join" -> joinGame(server, authData.authToken(), scanner);
             default -> System.out.println("Unknown command. Type 'help' to see available commands.");
         }
     }
