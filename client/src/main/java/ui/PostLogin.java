@@ -85,7 +85,7 @@ public class PostLogin {
         System.out.print("Enter game number you want to observe: ");
         int gameNum = Integer.parseInt(scanner.nextLine());
         if (gameNum < 1 || gameNum > gamesList.length) {
-            throw new Exception("Invalid game number")
+            throw new Exception("Invalid game number");
         }
         GameData gamePicked = gamesList[gameNum - 1];
         server.joinGame(gamePicked.gameID(), null, authToken);
