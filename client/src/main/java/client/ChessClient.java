@@ -72,6 +72,7 @@ public class ChessClient {
             case "list" -> listGames(server, authData.authToken());
             case "play" -> playGame(server, authData.authToken(), scanner);
             case "observe" -> observeGame(server, authData.authToken(), scanner);
+            case "quit" -> quit2();
             default -> System.out.println("Unknown command. Type 'help' to see available commands.");
         }
     }

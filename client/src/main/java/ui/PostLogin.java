@@ -9,10 +9,10 @@ public class PostLogin {
     private static GameData[] gamesList = null;
     public static void help2() {
         System.out.println("""
-               create <NAME> - a game
+               create - a game
                list - games
-               join <ID> [WHITE|BLACK] - a game
-               observe <ID> - a game
+               play - a game
+               observe - a game
                logout - when you are done
                quit - playing chess
                help - with possible commands""");
@@ -90,5 +90,9 @@ public class PostLogin {
         GameData gamePicked = gamesList[gameNum - 1];
         server.joinGame(gamePicked.gameID(), null, authToken);
         System.out.println("Successfully joined game as an observer");
+    }
+
+    public static void quit2() {
+        System.exit(0);
     }
     }

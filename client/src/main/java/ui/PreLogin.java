@@ -8,8 +8,8 @@ import java.util.Scanner;
 public class PreLogin {
     public static void help() {
         System.out.println("""
-                register <USERNAME> <PASSWORD> <EMAIL> - to create an account
-                login <USERNAME> <PASSWORD> - to play chess
+                register - to create an account
+                login - to play chess
                 quit - playing chess
                 help - with possible commands""");
     }

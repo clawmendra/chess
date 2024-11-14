@@ -14,7 +14,7 @@ public class ServerFacade {
     private final String serverUrl;
 
     public ServerFacade(String url) {
-        serverUrl = url;
+        this.serverUrl = url;
     }
 
     public AuthData register(String username, String password, String email) throws Exception {
