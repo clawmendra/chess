@@ -56,7 +56,7 @@ public class ChessClient {
 
     private void doPostLogin(String line) throws Exception {
         switch(line.toLowerCase()) {
-            case "help" -> help();
+            case "help" -> help2();
             case "logout" -> {
                 logout(server, authData.authToken());
                 state = State.LOGGED_OUT;

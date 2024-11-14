@@ -7,7 +7,7 @@ import java.util.Scanner;
 // Help, Logout, Create Game, List Games, Play Game, Observe Game
 public class PostLogin {
     private static GameData[] gamesList = null;
-    public static void help() {
+    public static void help2() {
         System.out.println("""
                create <NAME> - a game
                list - games
