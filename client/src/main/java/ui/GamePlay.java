@@ -7,19 +7,17 @@ import static ui.EscapeSequences.*;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
-//    private static final int SQUARE_SIZE_IN_CHARS = 3;
-//    private static final int LINE_WIDTH_IN_CHARS = 1;
 
     public static void main(String[] args) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.print(ERASE_SCREEN);
+        var board = new chess.ChessBoard();
+        board.resetBoard();
         // white view
         makeChessBoard(out, true);
         out.println();
         // black view
         makeChessBoard(out, false);
-        out.print(SET_BG_COLOR_BLACK);
-        out.print(SET_TEXT_COLOR_WHITE);
     }
 
     private static void makeChessBoard(PrintStream out, boolean whiteView) {
@@ -33,13 +31,13 @@ public class GamePlay {
 
             paintRow(out, row, whiteView);
 
-            // Print row number
             out.print(SET_BG_COLOR_BLACK);
             out.print(SET_TEXT_COLOR_WHITE);
             out.print(" " + drawRow + " ");
             out.println();
         }
 
+        drawHeader(out, whiteView);
     }
 
     private static void paintRow(PrintStream out, int row, boolean whiteView) {
