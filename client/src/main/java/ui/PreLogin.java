@@ -18,7 +18,7 @@ public class PreLogin {
         System.exit(0);
     }
 
-    public static AuthData login(ServerFacade server, Scanner scanner) throws Exception {
+    public static AuthData login(ServerFacade server, Scanner scanner) {
             System.out.print("Username: ");
             String username = scanner.nextLine();
             System.out.print("Password: ");
@@ -31,14 +31,39 @@ public class PreLogin {
             }
     }
 
-    public static AuthData register(ServerFacade server, Scanner scanner) throws Exception {
-        System.out.print("Username: ");
-        String username = scanner.nextLine();
-        System.out.print("Password: ");
-        String password = scanner.nextLine();
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
-        return server.register(username, password, email);
+    public static AuthData register(ServerFacade server, Scanner scanner) {
+        AuthData result = null;
+        while (result == null) {
+            String username = getValidInput(scanner, "Username");
+            String password = getValidInput(scanner, "Password");
+            String email = getValidInput(scanner, "Email");
+            result = tryRegister(server, username, password, email);
+        }
+        return result;
     }
 
+    private static String getValidInput(Scanner scanner, String fieldName) {
+        while (true) {
+            System.out.print(fieldName + ": ");
+            String input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                System.out.println(fieldName + " cannot be empty. Please try again.");
+                continue;
+            }
+            return input;
+        }
+    }
+
+    private static AuthData tryRegister(ServerFacade server, String username, String password, String email) {
+        try {
+            return server.register(username, password, email);
+        } catch (Exception e) {
+            if (e.getMessage().contains("403")) {
+                System.out.println("Username already taken. Please try again.");
+                return null;
+            }
+            System.out.println("Registration failed: " + e.getMessage());
+            return null;
+        }
+    }
 }

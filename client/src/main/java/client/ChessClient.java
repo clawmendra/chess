@@ -41,7 +41,7 @@ public class ChessClient {
         }
     }
 
-    private void doPreLogin(String line) throws Exception {
+    private void doPreLogin(String line) {
         switch(line.toLowerCase()) {
             case "help" -> help();
             case "quit" -> quit();
@@ -73,7 +73,7 @@ public class ChessClient {
             case "create" -> createGame(server, authData.authToken(), scanner);
             case "list" -> listGames(server, authData.authToken());
             case "play" -> playGame(server, authData.authToken(), scanner);
-            case "observe" -> observeGame(server, authData.authToken(), scanner);
+            case "observe" -> observeGame(scanner);
             case "quit" -> quit2();
             default -> System.out.println("Unknown command. Type 'help' to see available commands.");
         }

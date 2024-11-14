@@ -95,12 +95,12 @@ public class PostLogin {
         try {
             gameNumber = Integer.parseInt(scanner.nextLine());
             if (gameNumber < 1 || gameNumber > gamesList.length) {
-                System.out.println("Invalid game number");
+                System.out.println("Invalid game number.");
                 return null;
             }
             return gamesList[gameNumber - 1];
         } catch (NumberFormatException e) {
-            System.out.println("Invalid game number. Please enter a valid number.");
+            System.out.println("Invalid number.");
             return null;
         }
     }
@@ -139,7 +139,7 @@ public class PostLogin {
         GamePlay.displayChessBoard(whiteView, game);
     }
 
-    public static void observeGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
+    public static void observeGame(Scanner scanner) {
         if (gamesList == null || gamesList.length == 0) {
             System.out.println("Sorry, no available games to observe");
             return;
