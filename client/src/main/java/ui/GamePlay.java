@@ -44,15 +44,31 @@ public class GamePlay {
 
     private static String getPiece(int row, int col, boolean whiteView) {
         if (whiteView) {
-            if (row == 0) return backPieces(col, false);
-            if (row == 7) return backPieces(col, true);
-            if (row == 1) return BLACK_PAWN;
-            if (row == 6) return WHITE_PAWN;
+            if (row == 0) {
+                return backPieces(col, false);
+            }
+            if (row == 7) {
+                return backPieces(col, true);
+            }
+            if (row == 1) {
+                return BLACK_PAWN;
+            }
+            if (row == 6) {
+                return WHITE_PAWN;
+            }
         } else {
-            if (row == 0) return backPieces(BOARD_SIZE_IN_SQUARES - 1 - col, true);
-            if (row == 1) return WHITE_PAWN;
-            if (row == 6) return BLACK_PAWN;
-            if (row == 7) return backPieces(BOARD_SIZE_IN_SQUARES - 1 - col, false);
+            if (row == 0) {
+                return backPieces(BOARD_SIZE_IN_SQUARES - 1 - col, true);
+            }
+            if (row == 1) {
+                return WHITE_PAWN;
+            }
+            if (row == 6) {
+                return BLACK_PAWN;
+            }
+            if (row == 7) {
+                return backPieces(BOARD_SIZE_IN_SQUARES - 1 - col, false);
+            }
         }
         return EMPTY;
     }

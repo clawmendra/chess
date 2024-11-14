@@ -27,12 +27,17 @@ public class PostLogin {
     public static void createGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
         System.out.print("Name of the game: ");
         String gameName = scanner.nextLine();
+        if (gameName.isEmpty()) {
+            System.out.println("Game name cannot be empty. Please try again.");
+            return;
+        }
         server.createGame(gameName, authToken);
         System.out.println("Game created successfully");
     }
 
 
     public static void listGames(ServerFacade server, String authToken) throws Exception {
+       // Add users with name of game
         gamesList = server.listGames(authToken);
         if (gamesList.length == 0) {
             System.out.println("No games available");
@@ -48,12 +53,17 @@ public class PostLogin {
 
     private static String formatGame(GameData game) {
         StringBuilder info = new StringBuilder(game.gameName());
-        if (game.whiteUsername() != null) {
-            info.append(" | White: ").append(game.whiteUsername());
-        }
-        if (game.blackUsername() != null) {
-            info.append(" | Black: ").append(game.blackUsername());
-        }
+        info.append(game.gameName());
+//        if (game.whiteUsername() != null) {
+//            info.append(" | White: ").append(game.whiteUsername());
+//        }
+//        if (game.blackUsername() != null) {
+//            info.append(" | Black: ").append(game.blackUsername());
+//        }
+        String whitePlayer = game.whiteUsername() != null ? game.whiteUsername() : "<EMPTY>";
+        String blackPlayer = game.blackUsername() != null ? game.blackUsername() : "<EMPTY>";
+        info.append(" | White: ").append(whitePlayer);
+        info.append(" | Black: ").append(blackPlayer);
         return info.toString();
     }
 
@@ -100,27 +110,12 @@ public class PostLogin {
         }
 
         if (gameNum < 1 || gameNum > gamesList.length) {
-            System.out.println("Invalid game number. Please enter a number within the range of available games.");
+            System.out.println("Invalid game number.");
             return;
         }
-
         GameData gamePicked = gamesList[gameNum - 1];
-
-        try {
-            server.joinGame(gamePicked.gameID(), null, authToken);
-            System.out.println("Successfully joined game as an observer");
-            // Observer defaults to whiteView
-            GamePlay.displayChessBoard(true);
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-            if (e.getMessage().contains("failure: 400")) {
-                System.out.println("The game could not be joined. This may be due to an issue with the game ID or your authorization token. Please try again later.");
-            } else if (e.getMessage().contains("failure: 403")) {
-                System.out.println("You are not authorized to join this game as an observer. Please try a different game.");
-            } else {
-                System.out.println("An unexpected error occurred while trying to join the game. Please try again later.");
-            }
-        }
+        // pass game data and boolean
+        GamePlay.displayChessBoard(true);
     }
 
     public static void quit2() {

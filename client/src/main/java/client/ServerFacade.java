@@ -1,7 +1,6 @@
 package client;
 
 import com.google.gson.Gson;
-import exception.ResponseException;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -36,8 +35,8 @@ public class ServerFacade {
 
     public GameData[] listGames(String authToken) throws Exception {
         var path = "/game";
-        record listGamesResponse(GameData[] games) {}
-        var response = this.makeRequest("GET", path, null, listGamesResponse.class, authToken);
+        record ListGamesResp(GameData[] games) {}
+        var response = this.makeRequest("GET", path, null, ListGamesResp.class, authToken);
         return response.games();
     }
 
@@ -65,7 +64,6 @@ public class ServerFacade {
             if (authToken != null) {
                 http.addRequestProperty("Authorization", authToken);
             }
-
             writeBody(request, http);
             http.connect();
             throwIfNotSuccessful(http);
@@ -91,10 +89,11 @@ public class ServerFacade {
         }
     }
 
-    private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, ResponseException {
+    private void throwIfNotSuccessful(HttpURLConnection http) throws IOException {
         var status = http.getResponseCode();
         if (!isSuccessful(status)) {
-            throw new ResponseException(status, "failure: " + status);
+            String errorMessage = "Failure: " + status + " - " + http.getResponseMessage();
+            throw new IOException(errorMessage);
         }
     }
 

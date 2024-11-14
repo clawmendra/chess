@@ -39,12 +39,11 @@ public class ClearAndGetUserTests {
     @Test
     @DisplayName("Get User - Positive")
     void getUserPositive() throws DataAccessException {
-        UserData user = new UserData("testUser", "password", "email");
-        dataAccess.createUser(user);
-
-        UserData retrieved = dataAccess.getUser("testUser");
-        assertNotNull(retrieved);
-        assertEquals("testUser", retrieved.username());
+        UserData user1 = new UserData("user1", "password", "email");
+        dataAccess.createUser(user1);
+        UserData newUser1 = dataAccess.getUser("user1");
+        assertNotNull(newUser1);
+        assertEquals("user1", newUser1.username());
     }
 
     @Test
