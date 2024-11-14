@@ -53,13 +53,6 @@ public class PostLogin {
 
     private static String formatGame(GameData game) {
         StringBuilder info = new StringBuilder(game.gameName());
-        info.append(game.gameName());
-//        if (game.whiteUsername() != null) {
-//            info.append(" | White: ").append(game.whiteUsername());
-//        }
-//        if (game.blackUsername() != null) {
-//            info.append(" | Black: ").append(game.blackUsername());
-//        }
         String whitePlayer = game.whiteUsername() != null ? game.whiteUsername() : "<EMPTY>";
         String blackPlayer = game.blackUsername() != null ? game.blackUsername() : "<EMPTY>";
         info.append(" | White: ").append(whitePlayer);
@@ -68,7 +61,7 @@ public class PostLogin {
     }
 
     public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
-        if (gamesList.length == 0) {
+        if (gamesList == null || gamesList.length == 0) {
             System.out.println("Sorry, there aren't any games to play");
             return;
         }
