@@ -58,7 +58,7 @@ public class PostLogin {
 
     public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
         if (gamesList == null) {
-            System.out.println("Sorry, there are no games listed");
+            System.out.println("Sorry, this game is full");
             return;
         }
 
@@ -87,6 +87,7 @@ public class PostLogin {
     public static void observeGame(ServerFacade server,String authToken, Scanner scanner) throws Exception {
         if (gamesList == null) {
             System.out.println("Sorry, no available games to observe");
+            return;
         }
         System.out.print("Enter game number you want to observe: ");
         int gameNum = Integer.parseInt(scanner.nextLine());
