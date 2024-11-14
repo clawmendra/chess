@@ -4,7 +4,6 @@ import org.junit.jupiter.api.*;
 import server.Server;
 import static org.junit.jupiter.api.Assertions.*;
 
-
 public class ServerFacadeTests {
     private static Server server;
     static ServerFacade facade;
@@ -21,7 +20,6 @@ public class ServerFacadeTests {
     void clearDatabase() throws Exception {
         facade.makeRequest("DELETE", "/db", null, null);
     }
-
 
     @AfterAll
     static void stopServer() {
@@ -64,6 +62,19 @@ public class ServerFacadeTests {
     }
 
     @Test
+    void createGamePositive() throws Exception {
+        var authData = facade.register("player1", "password", "test@byu.edu");
+        var gameData = facade.createGame("testGame", authData.authToken());
+        assertNotNull(gameData.gameID());
+        assertTrue(gameData.gameID() > 0);
+    }
+
+    @Test
+    void createGameNegative() throws Exception {
+        assertThrows(Exception.class, () -> facade.createGame("testGame", "invalidAuthToken"));
+    }
+
+    @Test
     void listGamesPositive() throws Exception {
         var authData = facade.register("player1", "password", "test@byu.edu");
         facade.createGame("testGame", authData.authToken());
@@ -74,9 +85,7 @@ public class ServerFacadeTests {
 
     @Test
     void listGamesNegative() throws Exception {
-        assertThrows(Exception.class, () ->
-                facade.listGames("invalidAuthToken")
-        );
+        assertThrows(Exception.class, () -> facade.listGames("invalidAuthToken"));
     }
 
     @Test
