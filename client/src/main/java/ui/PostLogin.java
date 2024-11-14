@@ -68,8 +68,8 @@ public class PostLogin {
     }
 
     public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
-        if (gamesList == null) {
-            System.out.println("Sorry, this game is full");
+        if (gamesList.length == 0) {
+            System.out.println("Sorry, there aren't any games to play");
             return;
         }
 
