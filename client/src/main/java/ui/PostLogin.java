@@ -57,7 +57,7 @@ public class PostLogin {
 
     public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
         if (gamesList == null) {
-            System.out.println("List games first using 'list' command");
+            System.out.println("Sorry, there are no games listed");
             return;
         }
 
@@ -77,4 +77,18 @@ public class PostLogin {
         server.joinGame(selectedGame.gameID(), color, authToken);
         System.out.println("Successfully joined game");
         }
+
+    public static void observeGame(ServerFacade server,String authToken, Scanner scanner) throws Exception {
+        if (gamesList == null) {
+            System.out.println("Sorry, no available games to observe");
+        }
+        System.out.print("Enter game number you want to observe: ");
+        int gameNum = Integer.parseInt(scanner.nextLine());
+        if (gameNum < 1 || gameNum > gamesList.length) {
+            throw new Exception("Invalid game number")
+        }
+        GameData gamePicked = gamesList[gameNum - 1];
+        server.joinGame(gamePicked.gameID(), null, authToken);
+        System.out.println("Successfully joined game as an observer");
+    }
     }
