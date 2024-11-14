@@ -61,31 +61,82 @@ public class PostLogin {
     }
 
     public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
-        if (gamesList == null || gamesList.length == 0) {
+        if (!areGamesAvailable()) {
             System.out.println("Sorry, there aren't any games to play");
             return;
         }
 
-        System.out.print("Game number: ");
-        int gameNumber = Integer.parseInt(scanner.nextLine());
-        if (gameNumber < 1 || gameNumber > gamesList.length) {
-            throw new Exception("Invalid game number");
+        GameData selectedGame = selectGame(scanner);
+        if (selectedGame == null) {
+            return;
         }
 
+        if (isGameFull(selectedGame)) {
+            System.out.println("This game is full.");
+            System.out.println("Type 'observe' to watch this game or 'create' to start a new one.");
+            return;
+        }
+
+        String color = getPlayerColor(scanner, selectedGame);
+        if (color == null) {
+            return;
+        }
+
+        joinDisplay(server, authToken, selectedGame, color);
+    }
+
+    private static boolean areGamesAvailable() {
+        return gamesList != null && gamesList.length > 0;
+    }
+
+    private static GameData selectGame(Scanner scanner) {
+        System.out.print("Game number: ");
+        int gameNumber;
+        try {
+            gameNumber = Integer.parseInt(scanner.nextLine());
+            if (gameNumber < 1 || gameNumber > gamesList.length) {
+                System.out.println("Invalid game number");
+                return null;
+            }
+            return gamesList[gameNumber - 1];
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid game number. Please enter a valid number.");
+            return null;
+        }
+    }
+
+    private static boolean isGameFull(GameData game) {
+        return game.whiteUsername() != null && game.blackUsername() != null;
+    }
+
+    private static String getPlayerColor(Scanner scanner, GameData game) {
         System.out.print("Color (WHITE/BLACK): ");
         String color = scanner.nextLine().toUpperCase();
+
         if (!color.equals("WHITE") && !color.equals("BLACK")) {
-            throw new Exception("Invalid color. Must be WHITE or BLACK");
+            System.out.println("Invalid color. Must be WHITE or BLACK");
+            return null;
         }
 
-        GameData selectedGame = gamesList[gameNumber - 1];
-        server.joinGame(selectedGame.gameID(), color, authToken);
+        if (color.equals("WHITE") && game.whiteUsername() != null) {
+            System.out.println("White player slot is already taken.");
+            return null;
+        }
+        if (color.equals("BLACK") && game.blackUsername() != null) {
+            System.out.println("Black player slot is already taken.");
+            return null;
+        }
+        return color;
+    }
+
+    private static void joinDisplay(ServerFacade server, String authToken, GameData game, String color) throws Exception {
+        server.joinGame(game.gameID(), color, authToken);
         System.out.println("Successfully joined game");
-        var game = new ChessGame();
-        game.getBoard().resetBoard();
+        var chessGame = new ChessGame();
+        chessGame.getBoard().resetBoard();
 
         boolean whiteView = color.equals("WHITE");
-        GamePlay.displayChessBoard(whiteView, selectedGame);
+        GamePlay.displayChessBoard(whiteView, game);
     }
 
     public static void observeGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
