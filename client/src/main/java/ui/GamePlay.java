@@ -7,8 +7,8 @@ import static ui.EscapeSequences.*;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
-    private static final int SQUARE_SIZE_IN_CHARS = 3;
-    private static final int LINE_WIDTH_IN_CHARS = 1;
+//    private static final int SQUARE_SIZE_IN_CHARS = 3;
+//    private static final int LINE_WIDTH_IN_CHARS = 1;
 
     public static void main(String[] args) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -47,6 +47,35 @@ public class GamePlay {
             boolean isLightSquare = (row + col) % 2 == 0;
             drawSquare(out, row, col, isLightSquare, whiteView);
         }
+    }
+
+    private static String getPiece(int row, int col, boolean whiteView) {
+        if (whiteView) {
+            if (row == 0) return backPieces(col, true);
+            if (row == 7) return backPieces(col, true);
+            if (row == 1) return WHITE_PAWN;
+            if (row == 6) return BLACK_PAWN;
+        } else {
+            if (row == 0) return backPieces(BOARD_SIZE_IN_SQUARES - 1 - col, false);
+            if (row == 1) return BLACK_PAWN;
+            if (row == 6) return WHITE_PAWN;
+            if (row == 7) return backPieces(BOARD_SIZE_IN_SQUARES - 1 - col, true);
+        }
+        return EMPTY;
+    }
+
+    private static String backPieces(int col, boolean isWhite) {
+        return switch (col) {
+            case 0 -> isWhite ? WHITE_ROOK : BLACK_ROOK;
+            case 1 -> isWhite ? WHITE_KNIGHT : BLACK_KNIGHT;
+            case 2 -> isWhite ? WHITE_BISHOP : BLACK_BISHOP;
+            case 3 -> isWhite ? WHITE_QUEEN : BLACK_QUEEN;
+            case 4 -> isWhite ? WHITE_KING : BLACK_KING;
+            case 5 -> isWhite ? WHITE_BISHOP : BLACK_BISHOP;
+            case 6 -> isWhite ? WHITE_KNIGHT : BLACK_KNIGHT;
+            case 7 -> isWhite ? WHITE_ROOK : BLACK_ROOK;
+            default -> EMPTY;
+        };
     }
 
     private static void drawSquare(PrintStream out, int row, int col, boolean isLight, boolean whiteView) {

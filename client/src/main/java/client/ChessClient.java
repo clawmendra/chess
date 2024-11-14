@@ -3,13 +3,17 @@ package client;
 import model.AuthData;
 import static ui.PreLogin.*;
 import static ui.PostLogin.*;
+
+import java.io.PrintStream;
 import java.util.Scanner;
+import java.nio.charset.StandardCharsets;
 
 public class ChessClient {
     private final ServerFacade server;
     private State state = State.LOGGED_OUT;
     private AuthData authData;
     private final Scanner scanner = new Scanner(System.in);
+    private final PrintStream out;
 
     public enum State {
         LOGGED_IN,
@@ -18,6 +22,7 @@ public class ChessClient {
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
+        out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
     }
 
     public void run() {
