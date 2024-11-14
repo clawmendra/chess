@@ -55,7 +55,7 @@ public class PostLogin {
         return info.toString();
     }
 
-    public static void joinGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
+    public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
         if (gamesList == null) {
             System.out.println("List games first using 'list' command");
             return;

@@ -65,7 +65,7 @@ public class ChessClient {
             }
             case "create" -> createGame(server, authData.authToken(), scanner);
             case "list" -> listGames(server, authData.authToken());
-            case "join" -> joinGame(server, authData.authToken(), scanner);
+            case "play" -> playGame(server, authData.authToken(), scanner);
             default -> System.out.println("Unknown command. Type 'help' to see available commands.");
         }
     }
