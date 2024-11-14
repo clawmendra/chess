@@ -95,10 +95,19 @@ public class PostLogin {
             throw new Exception("Invalid game number");
         }
         GameData gamePicked = gamesList[gameNum - 1];
-        server.joinGame(gamePicked.gameID(), null, authToken);
-        System.out.println("Successfully joined game as an observer");
-        // Observer defaults to whiteView
-        GamePlay.displayChessBoard(true);
+        try {
+            server.joinGame(gamePicked.gameID(), null, authToken);
+            System.out.println("Successfully joined game as an observer");
+            // Observer defaults to whiteView
+            GamePlay.displayChessBoard(true);
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            if (e.getMessage().contains("failure: 400")) {
+                System.out.println("The server rejected the request to join the game. This could be due to an issue with the game ID or your authorization token.");
+            } else {
+                System.out.println("An unexpected error occurred while trying to join the game. Please try again later.");
+            }
+        }
     }
 
     public static void quit2() {
