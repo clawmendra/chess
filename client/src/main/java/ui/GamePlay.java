@@ -8,16 +8,12 @@ import static ui.EscapeSequences.*;
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
 
-    public static void main(String[] args) {
+    public static void displayChessBoard(boolean whiteView) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.print(ERASE_SCREEN);
         var board = new chess.ChessBoard();
         board.resetBoard();
-        // white view
-        makeChessBoard(out, true);
-        out.println();
-        // black view
-        makeChessBoard(out, false);
+        makeChessBoard(out, whiteView);
     }
 
     private static void makeChessBoard(PrintStream out, boolean whiteView) {
@@ -36,7 +32,6 @@ public class GamePlay {
             out.print(" " + drawRow + " ");
             out.println();
         }
-
         drawHeader(out, whiteView);
     }
 

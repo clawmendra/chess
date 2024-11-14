@@ -1,5 +1,6 @@
 package ui;
 
+import chess.ChessGame;
 import model.GameData;
 import client.ServerFacade;
 import java.util.Scanner;
@@ -76,7 +77,12 @@ public class PostLogin {
         GameData selectedGame = gamesList[gameNumber - 1];
         server.joinGame(selectedGame.gameID(), color, authToken);
         System.out.println("Successfully joined game");
-        }
+        var game = new ChessGame();
+        game.getBoard().resetBoard();
+
+        boolean whiteView = color.equals("WHITE");
+        GamePlay.displayChessBoard(whiteView);
+    }
 
     public static void observeGame(ServerFacade server,String authToken, Scanner scanner) throws Exception {
         if (gamesList == null) {
@@ -90,6 +96,8 @@ public class PostLogin {
         GameData gamePicked = gamesList[gameNum - 1];
         server.joinGame(gamePicked.gameID(), null, authToken);
         System.out.println("Successfully joined game as an observer");
+        // Observer defaults to whiteView
+        GamePlay.displayChessBoard(true);
     }
 
     public static void quit2() {
