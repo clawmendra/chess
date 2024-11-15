@@ -16,7 +16,6 @@ public class PostLogin {
                 play - a game
                 observe - a game
                 logout - when you are done
-                quit - playing chess
                 help - with possible commands""");
     }
 
@@ -37,7 +36,7 @@ public class PostLogin {
 
 
     public static void listGames(ServerFacade server, String authToken) throws Exception {
-       // Add users with name of game
+        // Add users with name of game
         gamesList = server.listGames(authToken);
         if (gamesList.length == 0) {
             System.out.println("No games available");
@@ -159,9 +158,5 @@ public class PostLogin {
         }
         GameData gamePicked = gamesList[gameNum - 1];
         GamePlay.displayChessBoard(true, gamePicked);
-    }
-
-    public static void quit2() {
-        System.exit(0);
     }
 }
