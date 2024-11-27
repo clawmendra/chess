@@ -108,16 +108,16 @@ public class GamePlay {
         }
     }
 
-
-    private static void drawHeader(PrintStream out, boolean whiteView) {
-        out.print("  ");
-        for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
-            char letter = (char)('a' + (whiteView ? col : BOARD_SIZE_IN_SQUARES - 1- col));
-            out.print(SET_BG_COLOR_BLACK);
-            out.print(SET_TEXT_COLOR_WHITE);
-            out.print(" " + letter + " ");
-        }
-        out.println();
-    }
+//
+//    private static void drawHeader(PrintStream out, boolean whiteView) {
+//        out.print("  ");
+//        for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
+//            char letter = (char)('a' + (whiteView ? col : BOARD_SIZE_IN_SQUARES - 1- col));
+//            out.print(SET_BG_COLOR_BLACK);
+//            out.print(SET_TEXT_COLOR_WHITE);
+//            out.print(" " + letter + " ");
+//        }
+//        out.println();
+//    }
 
 }
