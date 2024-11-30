@@ -7,10 +7,6 @@ import model.GameData;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
-    private final PrintStream out;
-    private final Scanner scanner;
-    private final GameData gameData;
-    private final WebSocketClient webSocketClient;
 
     public static void displayChessBoard(boolean whiteView, GameData gameData) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
