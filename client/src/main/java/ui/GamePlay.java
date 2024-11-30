@@ -1,5 +1,7 @@
 package ui;
 
+import chess.*;
+
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -7,6 +9,10 @@ import java.util.*;
 import static ui.EscapeSequences.*;
 import model.GameData;
 import websocket.WebSocketClient;
+import websocket.commands.UserGameCommand;
+import websocket.commands.UserGameCommand.CommandType;
+
+import javax.swing.text.Position;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
@@ -39,6 +45,27 @@ public class GamePlay {
         }
     }
 
+    public void handleServerMessage(ServerMessage message) {
+        switch (message.getServerMessageType()) {
+            case LOAD_GAME:
+                this.game = ((LoadGameMessage)message).getGame();
+                displayGame();
+                break;
+            case ERROR:
+                out.println("Error: " + ((ErrorMessage)message).getErrorMessage());
+                break;
+            case NOTIFICATION:
+                out.println("Notification: " + ((NotificationMessage)message).getMessage());
+                break;
+        }
+    }
+
+    private void displayGame() {
+        out.print(ERASE_SCREEN);
+        displayHelp();
+        makeChessBoard(out, isWhitePlayer);
+    }
+
     private void sendCommand(CommandType type) {
         UserGameCommand command = new UserGameCommand(type, gameData.authToken(), gameData.gameID());
         webSocketClient.sendCommand(command);
@@ -47,13 +74,73 @@ public class GamePlay {
 
     private void displayHelp() {
         out.println("Available commands:");
-        out.println("  help                    - Show this help message");
-        out.println("  redraw                  - Redraw the chess board");
-        out.println("  move <from> <to>        - Make a move (e.g., 'move e2 e4')");
-        out.println("  highlight <position>    - Show legal moves for piece (e.g., 'highlight e2')");
-        out.println("  resign                  - Resign from the game");
-        out.println("  leave                   - Leave the game");
+        out.println("  Help                    - Display this help message");
+        out.println("  Redraw                  - Redraw the chess board");
+        out.println("  Move <from> <to>        - Make a move (e.g., 'move e2 e4')");
+        out.println("  Highlight <position>    - Show legal moves for piece (e.g., 'highlight e2')");
+        out.println("  Resign                  - Forfeit from the game");
+        out.println("  Leave                   - Leave the game");
         out.println();
+    }
+
+    private void handleCommand() {
+        out.print("Enter command: ");
+        String input = scanner.nextLine().trim().toLowerCase();
+        String[] parts = input.split("\\s+");
+
+        try {
+            switch (parts[0]) {
+                case "help":
+                    // Help is already shown after each command
+                    break;
+
+                case "redraw":
+                    displayGame();
+                    break;
+
+                case "move":
+                    if (parts.length != 3) {
+                        out.println("Invalid move format. Use: move <from> <to>");
+                        break;
+                    }
+                    handleMove(parts[1], parts[2]);
+                    break;
+
+                case "highlight":
+                    if (parts.length != 2) {
+                        out.println("Invalid highlight format. Use: highlight <position>");
+                        break;
+                    }
+                    highlightLegalMoves(parts[1]);
+                    break;
+
+                case "resign":
+                    handleResign();
+                    break;
+
+                case "leave":
+                    handleLeave();
+                    break;
+
+                default:
+                    out.println("Unknown command. Type 'help' for available commands.");
+            }
+        } catch (Exception e) {
+            out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private void handleMove(String startPos, String endPos) {
+        Position start = parsePosition(startPos);
+        Position end = parsePosition(endPos);
+
+        // Create move command with the required constructor
+        UserGameCommand moveCommand = new UserGameCommand(
+                CommandType.MAKE_MOVE,
+                gameData.authToken(),
+                gameData.gameID()
+        );
+        webSocketClient.sendCommand(moveCommand);
     }
 
     public static void displayChessBoard(boolean whiteView, GameData gameData) {
@@ -64,7 +151,39 @@ public class GamePlay {
         makeChessBoard(out, whiteView);
     }
 
-    private static void makeChessBoard(PrintStream out, boolean whiteView) {
+    private void highlightLegalMoves(String pos) {
+        Position position = parsePosition(pos);
+        ChessPiece piece = game.getBoard().getPiece(position);
+
+        if (piece == null) {
+            out.println("No piece at position " + pos);
+            return;
+        }
+
+        highlightedMoves = piece.legalMoves(game.getBoard());
+        highlightedPosition = position;
+        displayGame();
+
+        // Clear highlights after displaying
+        highlightedMoves = new ArrayList<>();
+        highlightedPosition = null;
+    }
+
+    private void handleResign() {
+        out.print("Are you sure you want to forfeit? (yes/no): ");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+
+        if (confirm.equals("yes")) {
+            sendCommand(CommandType.RESIGN);
+        }
+    }
+
+    private void handleLeave() {
+        sendCommand(CommandType.LEAVE);
+        isPlaying = false;
+    }
+
+    private void makeChessBoard(PrintStream out, boolean whiteView) {
         drawHeader(out, whiteView);
         for (int row = 0; row < BOARD_SIZE_IN_SQUARES; row++) {
             int drawRow = whiteView ? BOARD_SIZE_IN_SQUARES - row : row + 1;
@@ -83,10 +202,34 @@ public class GamePlay {
         drawHeader(out, whiteView);
     }
 
+
+    private Position parsePosition(String pos) {
+        if (pos.length() != 2) {
+            throw new IllegalArgumentException("Invalid position format. Use letter+number (e.g., 'e2')");
+        }
+
+        int col = pos.charAt(0) - 'a';
+        int row = BOARD_SIZE_IN_SQUARES - (pos.charAt(1) - '0');
+
+        if (col < 0 || col >= BOARD_SIZE_IN_SQUARES || row < 0 || row >= BOARD_SIZE_IN_SQUARES) {
+            throw new IllegalArgumentException("Position out of bounds");
+        }
+
+        return new Position(row, col);
+    }
+
+
     private static void paintRow(PrintStream out, int row, boolean whiteView) {
         for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
             boolean isLightSquare = (row + col) % 2 == 0;
             drawSquare(out, row, col, isLightSquare, whiteView);
+        }
+    }
+
+
+    private boolean isPosHighlighted(Position pos) {
+        if (pos.equals(highlightedPosition)) return true; {
+            return highlightedMoves.stream().anyMatch(move -> move.getEndPosition().equals(pos));
         }
     }
 
