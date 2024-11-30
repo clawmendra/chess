@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import static ui.EscapeSequences.*;
 
+import model.AuthData;
 import model.GameData;
 import websocket.WebSocketClient;
 import websocket.commands.UserGameCommand;
@@ -18,6 +19,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private final PrintStream out;
     private final Scanner scanner;
     private final GameData gameData;
+    private final AuthData authData;  // Add this field
     private WebSocketClient webSocketClient;
     private boolean isWhitePlayer;
     private boolean isPlaying = true;
@@ -25,13 +27,14 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private static Collection<ChessMove> highlightedMoves = new ArrayList<>();
     private static ChessPosition highlightedPosition = null;
 
-    public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer) {
+    public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer, AuthData authData) {
         this.out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         this.scanner = new Scanner(System.in);
         this.gameData = gameData;
         this.webSocketClient = webSocketClient;
         this.isWhitePlayer = isWhitePlayer;
         this.game = new ChessGame();
+        this.authData = authData;
     }
 
     public void setWebSocketClient(WebSocketClient webSocketClient) {
@@ -53,7 +56,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 displayGame();
                 break;
             case ERROR:
-                out.println("Error: " + ((ErrorMessage)message).getErrorMessage());
+                out.println("Error");
                 break;
             case NOTIFICATION:
                 out.println("Notification: " + ((NotificationMessage)message).getMessage());
@@ -112,7 +115,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     }
 
     private void sendCommand(CommandType type) {
-        UserGameCommand command = new UserGameCommand(type, gameData.authToken(), gameData.gameID());
+        UserGameCommand command = new UserGameCommand(type, authData.authToken(), gameData.gameID());
         webSocketClient.sendCommand(command);
     }
 
@@ -124,7 +127,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             ChessMove move = new ChessMove(start, end, null);
             UserGameCommand moveCommand = new UserGameCommand(
                     CommandType.MAKE_MOVE,
-                    gameData.authToken(),
+                    authData.authToken(),
                     gameData.gameID()
             );
             webSocketClient.sendCommand(moveCommand);
@@ -144,7 +147,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 return;
             }
 
-            highlightedMoves = piece.legalMoves(game.getBoard());
+            highlightedMoves = piece.pieceMoves(game.getBoard(), position);
             highlightedPosition = position;
             displayGame();
             out.println("Enter to continue.");
@@ -197,7 +200,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         }
     }
 
-    private static void drawSquare(int row, int col, boolean isLight) {
+    private void drawSquare(int row, int col, boolean isLight) {
         ChessPosition pos = new ChessPosition(row, col);
         ChessPiece piece = game.getBoard().getPiece(pos);
 

@@ -1,6 +1,7 @@
 package ui;
 
 import chess.ChessGame;
+import model.AuthData;
 import model.GameData;
 import client.ServerFacade;
 import websocket.WebSocketClient;
@@ -61,7 +62,7 @@ public class PostLogin {
         return info.toString();
     }
 
-    public static void playGame(ServerFacade server, String authToken, Scanner scanner) throws Exception {
+    public static void playGame(ServerFacade server, AuthData authData, Scanner scanner) throws Exception {
         if (!areGamesAvailable()) {
             System.out.println("Sorry, there aren't any games to play");
             return;
@@ -83,7 +84,7 @@ public class PostLogin {
             return;
         }
 
-        joinDisplay(server, authToken, selectedGame, color);
+        joinDisplay(server, authData, selectedGame, color);
     }
 
     private static boolean areGamesAvailable() {
@@ -130,17 +131,18 @@ public class PostLogin {
         return color;
     }
 
-    private static void joinDisplay(ServerFacade server, String authToken, GameData game, String color) throws Exception {
-        server.joinGame(game.gameID(), color, authToken);
+    private static void joinDisplay(ServerFacade server, AuthData authData, GameData game, String color) throws Exception {
+        server.joinGame(game.gameID(), color, authData.authToken());
         System.out.println("Successfully joined game");
+
         try {
             boolean whiteView = color.equals("WHITE");
-            // Create GamePlay first
-            GamePlay gamePlay = new GamePlay(game, null, whiteView);  // temporarily pass null
-            // Initialize WebSocket with gamePlay as the handler
+
+            // Initialize WebSocket
+            GamePlay gamePlay = new GamePlay(game, null, whiteView, authData);  // Pass the AuthData
             WebSocketClient webSocketClient = server.initWebSocket(gamePlay);
-            // Set the WebSocket client in GamePlay
             gamePlay.setWebSocketClient(webSocketClient);
+
             // Run the game
             gamePlay.run();
         } catch (Exception e) {
@@ -149,7 +151,7 @@ public class PostLogin {
     }
 
     // Update the method signature to include ServerFacade
-    public static void observeGame(ServerFacade server, String authToken, Scanner scanner) {
+    public static void observeGame(ServerFacade server, AuthData authData, Scanner scanner) {
         if (gamesList == null || gamesList.length == 0) {
             System.out.println("Sorry, no available games to observe");
             return;
@@ -170,16 +172,9 @@ public class PostLogin {
 
         GameData gamePicked = gamesList[gameNum - 1];
         try {
-            // Create GamePlay instance for observer
-            GamePlay gamePlay = new GamePlay(gamePicked, null, true);
-
-            // Initialize WebSocket with gamePlay as the handler
+            GamePlay gamePlay = new GamePlay(gamePicked, null, true, authData);
             WebSocketClient webSocketClient = server.initWebSocket(gamePlay);
-
-            // Set the WebSocket client in GamePlay
             gamePlay.setWebSocketClient(webSocketClient);
-
-            // Run the game
             gamePlay.run();
         } catch (Exception e) {
             System.out.println("Error connecting to game: " + e.getMessage());
