@@ -56,7 +56,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 displayGame();
                 break;
             case ERROR:
-                out.println("Error");
+                out.println("Error: " + ((ErrorMessage)message).getErrorMessage());
                 break;
             case NOTIFICATION:
                 out.println("Notification: " + ((NotificationMessage)message).getMessage());
@@ -221,13 +221,13 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         }
     }
 
-    private static boolean isPositionHighlighted(ChessPosition pos) {
+    private boolean isPositionHighlighted(ChessPosition pos) {
         if (highlightedPosition != null && highlightedPosition.equals(pos)) return true; {
             return highlightedMoves.stream().anyMatch(move -> move.getEndPosition().equals(pos));
         }
     }
 
-    private static String getPieceSymbol(ChessPiece piece) {
+    private String getPieceSymbol(ChessPiece piece) {
         return switch (piece.getPieceType()) {
             case KING -> piece.getTeamColor() == ChessGame.TeamColor.WHITE ? WHITE_KING : BLACK_KING;
             case QUEEN -> piece.getTeamColor() == ChessGame.TeamColor.WHITE ? WHITE_QUEEN : BLACK_QUEEN;
