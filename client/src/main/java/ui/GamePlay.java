@@ -5,12 +5,14 @@ import chess.*;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
 import static ui.EscapeSequences.*;
+
 import model.GameData;
 import websocket.WebSocketClient;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
+import websocket.messages.*;
+
 
 import javax.swing.text.Position;
 
@@ -36,9 +38,7 @@ public class GamePlay {
     }
 
     public void run() {
-        // Send initial connect command
         sendCommand(CommandType.CONNECT);
-
         while (isPlaying) {
             displayGame();
             handleCommand();
@@ -66,18 +66,13 @@ public class GamePlay {
         makeChessBoard(out, isWhitePlayer);
     }
 
-    private void sendCommand(CommandType type) {
-        UserGameCommand command = new UserGameCommand(type, gameData.authToken(), gameData.gameID());
-        webSocketClient.sendCommand(command);
-    }
-
 
     private void displayHelp() {
         out.println("Available commands:");
         out.println("  Help                    - Display this help message");
         out.println("  Redraw                  - Redraw the chess board");
         out.println("  Move <from> <to>        - Make a move (e.g., 'move e2 e4')");
-        out.println("  Highlight <position>    - Show legal moves for piece (e.g., 'highlight e2')");
+        out.println("  Highlight <position>    - Show legal moves for piece");
         out.println("  Resign                  - Forfeit from the game");
         out.println("  Leave                   - Leave the game");
         out.println();
@@ -90,57 +85,38 @@ public class GamePlay {
 
         try {
             switch (parts[0]) {
-                case "help":
-                    // Help is already shown after each command
-                    break;
-
-                case "redraw":
-                    displayGame();
-                    break;
-
-                case "move":
+                case "help" -> displayHelp();
+                case "redraw" -> displayGame();
+                case "move" -> {
                     if (parts.length != 3) {
-                        out.println("Invalid move format. Use: move <from> <to>");
+                        out.println("Invalid format. Needs 'move <from> <to>'");
                         break;
                     }
                     handleMove(parts[1], parts[2]);
-                    break;
-
-                case "highlight":
+                }
+                case "highlight" -> {
                     if (parts.length != 2) {
-                        out.println("Invalid highlight format. Use: highlight <position>");
+                        out.println("Invalid format. Needs 'highlight <position>'");
                         break;
                     }
                     highlightLegalMoves(parts[1]);
-                    break;
-
-                case "resign":
-                    handleResign();
-                    break;
-
-                case "leave":
-                    handleLeave();
-                    break;
-
-                default:
-                    out.println("Unknown command. Type 'help' for available commands.");
+                }
+                case "resign" -> handleResign();
+                case "leave" -> handleLeave();
+                default -> out.println("Unknown command. Type 'help' for available commands.");
             }
         } catch (Exception e) {
             out.println("Error: " + e.getMessage());
         }
     }
 
-    private void handleMove(String startPos, String endPos) {
-        Position start = parsePosition(startPos);
-        Position end = parsePosition(endPos);
+    private void sendCommand(CommandType type) {
+        UserGameCommand command = new UserGameCommand(type, gameData.authToken(), gameData.gameID());
+        webSocketClient.sendCommand(command);
+    }
 
-        // Create move command with the required constructor
-        UserGameCommand moveCommand = new UserGameCommand(
-                CommandType.MAKE_MOVE,
-                gameData.authToken(),
-                gameData.gameID()
-        );
-        webSocketClient.sendCommand(moveCommand);
+    private void handleMove(String startPos, String endPos) {
+
     }
 
     public static void displayChessBoard(boolean whiteView, GameData gameData) {
