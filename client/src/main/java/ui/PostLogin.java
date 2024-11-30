@@ -3,6 +3,8 @@ package ui;
 import chess.ChessGame;
 import model.GameData;
 import client.ServerFacade;
+import websocket.WebSocketClient;
+
 import java.util.Scanner;
 
 // Help, Logout, Create Game, List Games, Play Game, Observe Game
@@ -131,14 +133,23 @@ public class PostLogin {
     private static void joinDisplay(ServerFacade server, String authToken, GameData game, String color) throws Exception {
         server.joinGame(game.gameID(), color, authToken);
         System.out.println("Successfully joined game");
-        var chessGame = new ChessGame();
-        chessGame.getBoard().resetBoard();
-
-        boolean whiteView = color.equals("WHITE");
-        GamePlay.displayChessBoard(whiteView, game);
+        try {
+            boolean whiteView = color.equals("WHITE");
+            // Create GamePlay first
+            GamePlay gamePlay = new GamePlay(game, null, whiteView);  // temporarily pass null
+            // Initialize WebSocket with gamePlay as the handler
+            WebSocketClient webSocketClient = server.initWebSocket(gamePlay);
+            // Set the WebSocket client in GamePlay
+            gamePlay.setWebSocketClient(webSocketClient);
+            // Run the game
+            gamePlay.run();
+        } catch (Exception e) {
+            System.out.println("Error connecting to game: " + e.getMessage());
+        }
     }
 
-    public static void observeGame(Scanner scanner) {
+    // Update the method signature to include ServerFacade
+    public static void observeGame(ServerFacade server, String authToken, Scanner scanner) {
         if (gamesList == null || gamesList.length == 0) {
             System.out.println("Sorry, no available games to observe");
             return;
@@ -156,7 +167,22 @@ public class PostLogin {
             System.out.println("Invalid game number.");
             return;
         }
+
         GameData gamePicked = gamesList[gameNum - 1];
-        GamePlay.displayChessBoard(true, gamePicked);
+        try {
+            // Create GamePlay instance for observer
+            GamePlay gamePlay = new GamePlay(gamePicked, null, true);
+
+            // Initialize WebSocket with gamePlay as the handler
+            WebSocketClient webSocketClient = server.initWebSocket(gamePlay);
+
+            // Set the WebSocket client in GamePlay
+            gamePlay.setWebSocketClient(webSocketClient);
+
+            // Run the game
+            gamePlay.run();
+        } catch (Exception e) {
+            System.out.println("Error connecting to game: " + e.getMessage());
+        }
     }
 }

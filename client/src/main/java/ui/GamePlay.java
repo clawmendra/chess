@@ -13,15 +13,12 @@ import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
 import websocket.messages.*;
 
-
-import javax.swing.text.Position;
-
-public class GamePlay {
+public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
     private final PrintStream out;
     private final Scanner scanner;
     private final GameData gameData;
-    private final WebSocketClient webSocketClient;
+    private WebSocketClient webSocketClient;
     private boolean isWhitePlayer;
     private boolean isPlaying = true;
     private static ChessGame game;
@@ -35,6 +32,10 @@ public class GamePlay {
         this.webSocketClient = webSocketClient;
         this.isWhitePlayer = isWhitePlayer;
         this.game = new ChessGame();
+    }
+
+    public void setWebSocketClient(WebSocketClient webSocketClient) {
+        this.webSocketClient = webSocketClient;
     }
 
     public void run() {
