@@ -7,6 +7,10 @@ import model.GameData;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
+    private final PrintStream out;
+    private final Scanner scanner;
+    private final GameData gameData;
+    private final WebSocketClient webSocketClient;
 
     public static void displayChessBoard(boolean whiteView, GameData gameData) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -108,16 +112,16 @@ public class GamePlay {
         }
     }
 
-//
-//    private static void drawHeader(PrintStream out, boolean whiteView) {
-//        out.print("  ");
-//        for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
-//            char letter = (char)('a' + (whiteView ? col : BOARD_SIZE_IN_SQUARES - 1- col));
-//            out.print(SET_BG_COLOR_BLACK);
-//            out.print(SET_TEXT_COLOR_WHITE);
-//            out.print(" " + letter + " ");
-//        }
-//        out.println();
-//    }
+
+    private static void drawHeader(PrintStream out, boolean whiteView) {
+        out.print("  ");
+        for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
+            char letter = (char)('a' + (whiteView ? col : BOARD_SIZE_IN_SQUARES - 1- col));
+            out.print(SET_BG_COLOR_BLACK);
+            out.print(SET_TEXT_COLOR_WHITE);
+            out.print(" " + letter + " ");
+        }
+        out.println();
+    }
 
 }
