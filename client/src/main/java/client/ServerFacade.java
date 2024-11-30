@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
+import websocket.WebSocketClient;
 
 import java.io.*;
 import java.net.*;
@@ -11,9 +12,16 @@ import java.net.*;
 
 public class ServerFacade {
     private final String serverUrl;
+    private WebSocketClient webSocketClient;
 
     public ServerFacade(String url) {
         this.serverUrl = url;
+    }
+
+    public WebSocketClient initWebSocket(WebSocketClient.ServerMessageHandler handler) throws Exception {
+        String wsUrl = serverUrl.replace("http:", "ws:") + "/connect";  // Convert HTTP URL to WebSocket URL
+        webSocketClient = new WebSocketClient(wsUrl, handler);
+        return webSocketClient;
     }
 
     public AuthData register(String username, String password, String email) throws Exception {

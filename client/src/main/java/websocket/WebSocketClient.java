@@ -1,38 +1,74 @@
 package websocket;
+import com.google.gson.Gson;
+import websocket.messages.ServerMessage;
+import websocket.commands.UserGameCommand;
+
 import javax.websocket.*;
 import java.net.URI;
-import java.util.Scanner;
 
 
 public class WebSocketClient extends Endpoint {
+    private Session session;
+    private final ServerMessageHandler messageHandler;
+    private final Gson gson;
 
-    public static void main(String [] args) throws Exception {
-       var ws = new WebSocketClient();
-       Scanner  scanner = new Scanner(System.in);
-       System.out.println("Echo message");
-       while (true) {
-           ws.send(scanner.nextLine());
-       }
-    }
+    public WebSocketClient(String serverUrl, ServerMessageHandler handler) throws Exception {
+        this.messageHandler = handler;
+        this.gson = new Gson();
 
-    public Session session;
-
-    public WebSocketClient() throws Exception {
-        URI uri = new URI("ws://localhost:8080/ws");
+        URI uri = new URI(serverUrl);
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         this.session = container.connectToServer(this, uri);
 
+        // Add message handler for incoming messages
         this.session.addMessageHandler(new MessageHandler.Whole<String>() {
+            @Override
             public void onMessage(String message) {
-                System.out.println(message);
+                try {
+                    // Convert JSON message to ServerMessage object
+                    ServerMessage serverMessage = gson.fromJson(message, ServerMessage.class);
+                    // Pass to message handler (GamePlay)
+                    messageHandler.handleServerMessage(serverMessage);
+                } catch (Exception e) {
+                    System.err.println("Error handling message: " + e.getMessage());
+                }
             }
         });
     }
-    public void send(String msg) throws Exception {
-        this.session.getBasicRemote().sendText(msg);
+
+    public void sendCommand(UserGameCommand command) {
+        try {
+            if (session != null && session.isOpen()) {
+                // Convert command to JSON
+                String jsonCommand = gson.toJson(command);
+                session.getBasicRemote().sendText(jsonCommand);
+            } else {
+                System.err.println("WebSocket is not connected!");
+            }
+        } catch (Exception e) {
+            System.err.println("Error sending command: " + e.getMessage());
+        }
     }
 
+    @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
+        System.out.println("WebSocket Connected!");
+        this.session = session;
+    }
+
+    @Override
+    public void onClose(Session session, CloseReason closeReason) {
+        System.out.println("WebSocket Closed! Reason: " + closeReason.getReasonPhrase());
+        this.session = null;
+    }
+
+    @Override
+    public void onError(Session session, Throwable throwable) {
+        System.err.println("WebSocket Error: " + throwable.getMessage());
+    }
+
+    public interface ServerMessageHandler {
+        void handleServerMessage(ServerMessage message);
     }
 
 }
