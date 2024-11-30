@@ -2,11 +2,59 @@ package ui;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 import static ui.EscapeSequences.*;
 import model.GameData;
+import websocket.WebSocketClient;
 
 public class GamePlay {
     private static final int BOARD_SIZE_IN_SQUARES = 8;
+    private final PrintStream out;
+    private final Scanner scanner;
+    private final GameData gameData;
+    private final WebSocketClient webSocketClient;
+    private boolean isWhitePlayer;
+    private boolean isPlaying = true;
+    private ChessGame game;
+    private Collection<ChessMove> highlightedMoves = new ArrayList<>();
+    private Position highlightedPosition = null;
+
+    public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer) {
+        this.out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        this.scanner = new Scanner(System.in);
+        this.gameData = gameData;
+        this.webSocketClient = webSocketClient;
+        this.isWhitePlayer = isWhitePlayer;
+        this.game = new ChessGame();
+    }
+
+    public void run() {
+        // Send initial connect command
+        sendCommand(CommandType.CONNECT);
+
+        while (isPlaying) {
+            displayGame();
+            handleCommand();
+        }
+    }
+
+    private void sendCommand(CommandType type) {
+        UserGameCommand command = new UserGameCommand(type, gameData.authToken(), gameData.gameID());
+        webSocketClient.sendCommand(command);
+    }
+
+
+    private void displayHelp() {
+        out.println("Available commands:");
+        out.println("  help                    - Show this help message");
+        out.println("  redraw                  - Redraw the chess board");
+        out.println("  move <from> <to>        - Make a move (e.g., 'move e2 e4')");
+        out.println("  highlight <position>    - Show legal moves for piece (e.g., 'highlight e2')");
+        out.println("  resign                  - Resign from the game");
+        out.println("  leave                   - Leave the game");
+        out.println();
+    }
 
     public static void displayChessBoard(boolean whiteView, GameData gameData) {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
