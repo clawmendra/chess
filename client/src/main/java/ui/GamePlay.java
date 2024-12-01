@@ -10,6 +10,7 @@ import static ui.EscapeSequences.*;
 import model.AuthData;
 import model.GameData;
 import websocket.WebSocketClient;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.commands.UserGameCommand.CommandType;
 import websocket.messages.*;
@@ -56,10 +57,18 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 displayGame();
                 break;
             case ERROR:
-                out.println("Error: " + ((ErrorMessage)message).getErrorMessage());
+                String errorMsg = ((ErrorMessage)message).getErrorMessage();
+                out.println("Error: " + errorMsg);
+                // If this was a move error, we might want to redisplay the board
+                if (errorMsg.contains("invalid move")) {
+                    displayGame();
+                }
                 break;
             case NOTIFICATION:
-                out.println("Notification: " + ((NotificationMessage)message).getMessage());
+                NotificationMessage notificationMessage = (NotificationMessage)message;
+                out.println("\nNotification: " + notificationMessage.getMessage());
+                // Handle game state changes for notifications
+                handleGameStateChange(notificationMessage);
                 break;
         }
     }
@@ -82,7 +91,41 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         out.println();
     }
 
+    private void handleGameStateChange(NotificationMessage message) {
+        String notification = message.getMessage();
+        if (notification.contains("checkmate")) {
+            out.println("\n*** CHECKMATE ***");
+            // Maybe disable further moves
+        } else if (notification.contains("in check")) {
+            out.println("\n*** CHECK ***");
+        } else if (notification.contains("resigned")) {
+            out.println("\n*** GAME OVER - RESIGNATION ***");
+            // Maybe disable further moves
+        }
+        displayGame();
+    }
+
+
+    private boolean isGameOver() {
+        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            out.println("White is in checkmate!");
+            return true;
+        }
+        if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            out.println("Black is in checkmate!");
+            return true;
+        }
+        if (game.isInStalemate(ChessGame.TeamColor.WHITE) || game.isInStalemate(ChessGame.TeamColor.BLACK)) {
+            out.println("Game is in stalemate!");
+            return true;
+        }
+        return false;
+    }
+
     private void handleCommand() {
+        if (isGameOver()) {
+            out.println("Game over! Type 'leave' to exit or 'help' for other commands.");
+        }
         out.print("Enter command: ");
         String input = scanner.nextLine().trim().toLowerCase();
         String[] parts = input.split("\\s+");
@@ -125,10 +168,10 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             ChessPosition end = parsePosition(endPos);
 
             ChessMove move = new ChessMove(start, end, null);
-            UserGameCommand moveCommand = new UserGameCommand(
-                    CommandType.MAKE_MOVE,
+            MakeMoveCommand moveCommand = new MakeMoveCommand(
                     authData.authToken(),
-                    gameData.gameID()
+                    gameData.gameID(),
+                    move
             );
             webSocketClient.sendCommand(moveCommand);
         } catch (IllegalArgumentException e) {
