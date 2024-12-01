@@ -74,7 +74,7 @@ public class WebSocketHandler {
                     handleMove(session, command);
                     break;
                 case LEAVE:
-//                    handleLeave(session, command);
+                    handleLeave(session, command);
                     break;
                 case RESIGN:
 //                    handleResign(session, command);
@@ -85,8 +85,58 @@ public class WebSocketHandler {
 
         } catch (Exception e) {
             System.err.println("Error processing message: " + e.getMessage()); // Add debug logging
-            e.printStackTrace();
             sendError(session, "Error processing command: " + e.getMessage());
+        }
+    }
+
+    private void handleLeave(Session session, UserGameCommand command) {
+        try {
+            Connection conn = connections.get(session);
+            if (conn == null) {
+                sendError(session, "Error: Not connected to a game");
+                return;
+            }
+
+            // Get current game state
+            GameData currentGameData = dataAccess.getGame(command.getGameID());
+            if (currentGameData == null) {
+                sendError(session, "Error: Game not found");
+                return;
+            }
+            // Create new GameData, removing player that left
+            GameData updatedGameData;
+            if (conn.username.equals(currentGameData.whiteUsername())) {
+                updatedGameData = new GameData(
+                        currentGameData.gameID(),
+                        null,  // Remove white player
+                        currentGameData.blackUsername(),
+                        currentGameData.gameName(),
+                        currentGameData.game()
+                );
+            } else if (conn.username.equals(currentGameData.blackUsername())) {
+                updatedGameData = new GameData(
+                        currentGameData.gameID(),
+                        currentGameData.whiteUsername(),
+                        null,  // Remove black player
+                        currentGameData.gameName(),
+                        currentGameData.game()
+                );
+            } else {
+                // Observer leaving - no need to update game data
+                updatedGameData = currentGameData;
+            }
+
+            // Update game in database if player left (not just observer)
+            if (!updatedGameData.equals(currentGameData)) {
+                dataAccess.updateGame(updatedGameData);
+            }
+
+            connections.remove(session);
+            broadcastNotification(command.getGameID(), session,
+                    String.format("%s left the game", conn.username));
+
+        } catch (Exception e) {
+            sendError(session, "Error leaving game: " + e.getMessage());
         }
     }
 
