@@ -27,6 +27,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private static ChessGame game;
     private static Collection<ChessMove> highlightedMoves = new ArrayList<>();
     private static ChessPosition highlightedPosition = null;
+    private boolean hasPlayerResigned = false;
 
     public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer, AuthData authData) {
         this.out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -92,17 +93,21 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     }
 
     private void handleGameStateChange(NotificationMessage message) {
-        String notification = message.getMessage();
+        String notification = message.getMessage().toLowerCase();
         if (notification.contains("checkmate")) {
-            out.println("\n*** CHECKMATE ***");
-            // Maybe disable further moves
-        } else if (notification.contains("in check")) {
+            out.println("\n*** CHECKMATE - GAME OVER ***");
+            displayGame();
+        } else if (notification.contains("check")) {
             out.println("\n*** CHECK ***");
-        } else if (notification.contains("resigned")) {
-            out.println("\n*** GAME OVER - RESIGNATION ***");
-            // Maybe disable further moves
+            displayGame();
+        } else if (notification.contains("resign")) {
+            out.println("\n*** GAME OVER - PLAYER RESIGN ***");
+            hasPlayerResigned = true;
+            displayGame();
+        } else if (notification.contains("leave")) {
+            out.println("\n PLAYER LEFT GAME");
+            displayGame();
         }
-        displayGame();
     }
 
 
@@ -122,9 +127,14 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         return false;
     }
 
+    private boolean isGameActive() {
+        return !isGameOver() && !hasPlayerResigned;  // Add hasPlayerResigned field
+    }
+
     private void handleCommand() {
-        if (isGameOver()) {
-            out.println("Game over! Type 'leave' to exit or 'help' for other commands.");
+        if (!isGameActive() && !gameData.gameName().equals("help") && !gameData.gameName().equals("leave")) {
+            out.println("Game is over. You can only use 'help' or 'leave' commands.");
+            return;
         }
         out.print("Enter command: ");
         String input = scanner.nextLine().trim().toLowerCase();
@@ -166,8 +176,8 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         try {
             ChessPosition start = parsePosition(startPos);
             ChessPosition end = parsePosition(endPos);
-
             ChessMove move = new ChessMove(start, end, null);
+
             MakeMoveCommand moveCommand = new MakeMoveCommand(
                     authData.authToken(),
                     gameData.gameID(),
@@ -209,6 +219,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         String confirm = scanner.nextLine().trim().toLowerCase();
 
         if (confirm.equals("yes")) {
+            hasPlayerResigned = true;
             sendCommand(CommandType.RESIGN);
         }
     }
