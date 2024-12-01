@@ -1,10 +1,15 @@
 package handler;
 
+import chess.ChessGame;
+import chess.ChessMove;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.DataAccess;
 import model.GameData;
+import org.eclipse.jetty.server.Authentication;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.*;
 
@@ -66,7 +71,7 @@ public class WebSocketHandler {
                     handleConnect(session, command);
                     break;
                 case MAKE_MOVE:
-//                    handleMove(session, command);
+                    handleMove(session, command);
                     break;
                 case LEAVE:
 //                    handleLeave(session, command);
@@ -84,6 +89,77 @@ public class WebSocketHandler {
             sendError(session, "Error processing command: " + e.getMessage());
         }
     }
+
+    private void handleMove(Session session, UserGameCommand command) {
+        try {
+            Connection conn = connections.get(session);
+            if (conn == null) {
+                sendError(session, "Error: Not connected to a game");
+                return;
+            }
+
+            // Get current game state
+            GameData currentGameData = dataAccess.getGame(command.getGameID());
+            if (currentGameData == null) {
+                sendError(session, "Error: Game not found");
+                return;
+            }
+
+            ChessGame game = currentGameData.game();
+
+            // Make the move
+            ChessMove move = ((MakeMoveCommand)command).getMove();
+            game.makeMove(move);
+
+            // Create new GameData with updated game state
+            GameData updatedGameData = new GameData(
+                    currentGameData.gameID(),
+                    currentGameData.whiteUsername(),
+                    currentGameData.blackUsername(),
+                    currentGameData.gameName(),
+                    game
+            );
+
+            dataAccess.updateGame(updatedGameData);
+            // Send updated game state to all clients
+            LoadGameMessage gameMessage = new LoadGameMessage(game);
+            broadcastToAll(command.getGameID(), gameMessage);
+
+            // Notify about the move
+            String moveNotification = String.format("%s moved from %s to %s",
+                    conn.username, move.getStartPosition(), move.getEndPosition());
+            broadcastNotification(command.getGameID(), session, moveNotification);
+
+            // Check game state and send appropriate notifications
+            if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+                broadcastToAll(command.getGameID(),
+                        new NotificationMessage("White is in checkmate!"));
+            } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+                broadcastToAll(command.getGameID(),
+                        new NotificationMessage("Black is in checkmate!"));
+            } else if (game.isInCheck(ChessGame.TeamColor.WHITE)) {
+                broadcastToAll(command.getGameID(),
+                        new NotificationMessage("White is in check!"));
+            } else if (game.isInCheck(ChessGame.TeamColor.BLACK)) {
+                broadcastToAll(command.getGameID(),
+                        new NotificationMessage("Black is in check!"));
+            }
+        } catch (InvalidMoveException e) {
+            sendError(session, "Invalid move: " + e.getMessage());
+        } catch (Exception e) {
+            sendError(session, "Error making move: " + e.getMessage());
+        }
+    }
+
+    // Helper method for broadcasting to all clients in a game
+    private void broadcastToAll(Integer gameID, ServerMessage message) {
+        for (Map.Entry<Session, Connection> entry : connections.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().gameID.equals(gameID)) {
+                sendToSession(entry.getKey(), message);
+            }
+        }
+    }
+
 
     private void handleConnect(Session session, UserGameCommand command) {
         try {
