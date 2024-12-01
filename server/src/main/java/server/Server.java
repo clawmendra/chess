@@ -16,6 +16,8 @@ public class Server {
     private final ListGamesHandler listGamesHandler;
     private final CreateGameHandler createGameHandler;
     private final JoinGameHandler joinGameHandler;
+    private final WebSocketHandler webSocketHandler;
+
 
     public Server() {
         //DataAccess dataAccess = new MemoryDataAccess();
@@ -40,13 +42,16 @@ public class Server {
         this.listGamesHandler = new ListGamesHandler(listGamesService);
         this.createGameHandler = new CreateGameHandler(createGameService);
         this.joinGameHandler = new JoinGameHandler(joinGameService);
+        this.webSocketHandler = new WebSocketHandler(dataAccess);
     }
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
 
-        // Register your endpoints and handle exceptions here.
+        // Websocket endpoint
+        Spark.webSocket("/ws", webSocketHandler);
+        // HTTP endpoints
         Spark.delete("/db", clearHandler);
         Spark.post("/user", registerHandler);
         Spark.post("/session", loginHandler);
