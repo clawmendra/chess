@@ -39,7 +39,6 @@ public class PostLogin {
 
 
     public static void listGames(ServerFacade server, String authToken) throws Exception {
-        // Add users with name of game
         gamesList = server.listGames(authToken);
         if (gamesList.length == 0) {
             System.out.println("No games available");
