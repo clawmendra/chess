@@ -24,10 +24,12 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private WebSocketClient webSocketClient;
     private boolean isWhitePlayer;
     private boolean isPlaying = true;
-    private static ChessGame game;
-    private static Collection<ChessMove> highlightedMoves = new ArrayList<>();
-    private static ChessPosition highlightedPosition = null;
+    private ChessGame game;
+    private Collection<ChessMove> highlightedMoves = new ArrayList<>();
+    private ChessPosition highlightedPosition = null;
     private boolean hasPlayerResigned = false;
+    private boolean hasPlayerResigned = false;
+    private boolean gameLoaded = false;
 
     public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer, AuthData authData) {
         this.out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -43,18 +45,39 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         this.webSocketClient = webSocketClient;
     }
 
+
     public void run() {
-        sendCommand(CommandType.CONNECT);
-        while (isPlaying) {
-            displayGame();
-            handleCommand();
+        try {
+            // After WebSocket connection is established, send CONNECT message
+            UserGameCommand connectCommand = new UserGameCommand(
+                    CommandType.CONNECT,
+                    authData.authToken(),
+                    gameData.gameID()
+            );
+            webSocketClient.sendCommand(connectCommand);
+
+            // Now start the game UI loop
+            displayHelp();
+            Thread.sleep(100);
+
+            if (gameLoaded) {
+                displayGame();
+            }
+            while (isPlaying) {
+                handleCommand();
+            }
+        } catch (Exception e) {
+            System.out.println("Error in game: " + e.getMessage());
         }
     }
+
 
     public void handleServerMessage(ServerMessage message) {
         switch (message.getServerMessageType()) {
             case LOAD_GAME:
-                this.game = ((LoadGameMessage)message).getGame();
+                LoadGameMessage loadMessage = (LoadGameMessage) message;
+                this.game = loadMessage.getGame();
+                this.gameLoaded = true;
                 displayGame();
                 break;
             case ERROR:
@@ -75,8 +98,11 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     }
 
     private void displayGame() {
+       if (!gameLoaded) {
+           out.println("Game Loading...");
+           return;
+       }
         out.print(ERASE_SCREEN);
-        displayHelp();
         makeChessBoard();
     }
 
@@ -230,6 +256,11 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     }
 
     private void makeChessBoard() {
+        if (game == null || game.getBoard() == null) {
+            out.println("Error: Game or board not initialized");
+            return;
+        }
+
         drawHeader();
         for (int row = 0; row < BOARD_SIZE_IN_SQUARES; row++) {
             int drawRow = isWhitePlayer ? BOARD_SIZE_IN_SQUARES - row : row + 1;
@@ -246,6 +277,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         }
         drawHeader();
     }
+
 
     private void paintRow(int row) {
         for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {

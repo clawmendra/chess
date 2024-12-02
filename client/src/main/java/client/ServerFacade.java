@@ -18,8 +18,8 @@ public class ServerFacade {
     }
 
     public WebSocketClient initWebSocket(WebSocketClient.ServerMessageHandler handler) throws Exception {
-        String wsUrl = serverUrl.replace("http:", "ws:") + "/connect";  // Convert HTTP URL to WebSocket URL
-        return new WebSocketClient(wsUrl, handler);
+        String wsUrl = serverUrl.replace("http://", "ws://") + "/ws";
+        return new WebSocketClient(wsUrl, handler);  // Convert HTTP URL to WebSocket URL
     }
 
     public AuthData register(String username, String password, String email) throws Exception {
