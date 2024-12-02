@@ -149,7 +149,7 @@ public class PostLogin {
         }
     }
 
-    // Update the method signature to include ServerFacade
+
     public static void observeGame(ServerFacade server, AuthData authData, Scanner scanner) {
         if (gamesList == null || gamesList.length == 0) {
             System.out.println("Sorry, no available games to observe");

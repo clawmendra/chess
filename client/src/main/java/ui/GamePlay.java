@@ -28,7 +28,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private Collection<ChessMove> highlightedMoves = new ArrayList<>();
     private ChessPosition highlightedPosition = null;
     private boolean hasPlayerResigned = false;
-    private boolean gameLoaded = false;
+    private boolean gameLoaded = true;
 
     public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer, AuthData authData) {
         this.out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
@@ -48,6 +48,8 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     public void run() {
         try {
             // After WebSocket connection is established, send CONNECT message
+            out.print(ERASE_SCREEN);
+            out.println("Connecting to game..");
             UserGameCommand connectCommand = new UserGameCommand(
                     CommandType.CONNECT,
                     authData.authToken(),
@@ -56,9 +58,8 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             webSocketClient.sendCommand(connectCommand);
 
             // Now start the game UI loop
+            Thread.sleep(1000);
             displayHelp();
-            Thread.sleep(100);
-
             if (gameLoaded) {
                 displayGame();
             }
@@ -102,11 +103,19 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
            return;
        }
         out.print(ERASE_SCREEN);
+        out.print(SET_BG_COLOR_BLACK);  // Reset background to black
+        out.print(SET_TEXT_COLOR_WHITE); // Reset text to white
+        out.println();  // Move to
         makeChessBoard();
+        // Reset colors after board
+        out.print(SET_BG_COLOR_BLACK);
+        out.print(SET_TEXT_COLOR_WHITE);
     }
 
 
     private void displayHelp() {
+        out.print(SET_BG_COLOR_BLACK);  // Reset background to black
+        out.print(SET_TEXT_COLOR_WHITE); // Reset text to white
         out.println("Available commands:");
         out.println("  Help                    - Display this help message");
         out.println("  Redraw                  - Redraw the chess board");
@@ -251,6 +260,8 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
 
     private void handleLeave() {
         sendCommand(CommandType.LEAVE);
+        out.println("You have left the game.");
+        out.print("Type 'help' to display options.");
         isPlaying = false;
     }
 
@@ -260,51 +271,71 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             return;
         }
 
+        // Draw the top header
         drawHeader();
+
+        // Draw each row
         for (int row = 0; row < BOARD_SIZE_IN_SQUARES; row++) {
-            int drawRow = isWhitePlayer ? BOARD_SIZE_IN_SQUARES - row : row + 1;
+            // Display row numbers from 8 to 1
+            int displayRank = BOARD_SIZE_IN_SQUARES - row;
+
+            // Draw the row number on the left
             out.print(SET_BG_COLOR_BLACK);
             out.print(SET_TEXT_COLOR_WHITE);
-            out.print(" " + drawRow + " ");
+            out.print(" " + displayRank + " ");
 
+            // Draw the row's squares and pieces
             paintRow(row);
 
+            // Draw the row number on the right
             out.print(SET_BG_COLOR_BLACK);
             out.print(SET_TEXT_COLOR_WHITE);
-            out.print(" " + drawRow + " ");
+            out.print(" " + displayRank + " ");
             out.println();
         }
+
+        // Draw the bottom header
         drawHeader();
     }
-
 
     private void paintRow(int row) {
         for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
             boolean isLightSquare = (row + col) % 2 == 0;
-            drawSquare(row, col, isLightSquare);
+
+            // Create chess position
+            ChessPosition position = new ChessPosition(8 - row, col + 1);
+            // Set background color
+            if (isPositionHighlighted(position)) {
+                if (isLightSquare) {
+                    out.print(SET_BG_COLOR_GREEN);
+                } else {
+                    out.print(SET_BG_COLOR_DARK_GREEN);
+                }
+            } else {
+                out.print(isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_BLACK);
+            }
+
+            // Get and draw the piece
+            ChessPiece piece = game.getBoard().getPiece(position);
+            if (piece == null) {
+                // For empty squares, maintain background color visibility
+                out.print("     ");
+            } else {
+                // Set piece color (red for white pieces, blue for black pieces)
+                if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+                    out.print(SET_TEXT_COLOR_RED);
+                } else {
+                    out.print(SET_TEXT_COLOR_BLUE);
+                }
+                String pieceSymbol = getPieceSymbol(piece);
+                out.print(" " + pieceSymbol + " ");
+            }
+            // Reset colors after each square
+            out.print(RESET_BG_COLOR);
+            out.print(RESET_TEXT_COLOR);
         }
     }
 
-    private void drawSquare(int row, int col, boolean isLight) {
-        ChessPosition pos = new ChessPosition(row, col);
-        ChessPiece piece = game.getBoard().getPiece(pos);
-
-        if (isPositionHighlighted(pos)) {
-            out.print(SET_BG_COLOR_GREEN);
-        } else if (isLight) {
-            out.print(SET_TEXT_COLOR_WHITE);
-        } else {
-            out.print(SET_BG_COLOR_BLACK);
-        }
-        // Draw piece
-        if (piece == null) {
-            out.print(EMPTY);
-        } else {
-            boolean isWhitePiece = piece.getTeamColor() == ChessGame.TeamColor.WHITE;
-            out.print(isWhitePiece ? SET_TEXT_COLOR_RED : SET_TEXT_COLOR_BLUE);
-            out.print(getPieceSymbol(piece));
-        }
-    }
 
     private boolean isPositionHighlighted(ChessPosition pos) {
         if (highlightedPosition != null && highlightedPosition.equals(pos)) return true; {
@@ -326,10 +357,10 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private void drawHeader() {
         out.print("   ");
         for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
-            char letter = (char)('a' + (isWhitePlayer ? col : BOARD_SIZE_IN_SQUARES - 1 - col));
+            char letter = (char)('a' + (isWhitePlayer ? col : (BOARD_SIZE_IN_SQUARES - 1 - col)));
             out.print(SET_BG_COLOR_BLACK);
             out.print(SET_TEXT_COLOR_WHITE);
-            out.print(" " + letter + " ");
+            out.print("  " + letter + "  ");
         }
         out.println();
     }
@@ -339,10 +370,10 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             throw new IllegalArgumentException("Invalid position format. Use letter+number (ex: 'e2')");
         }
 
-        int col = pos.charAt(0) - 'a';
-        int row = BOARD_SIZE_IN_SQUARES - (pos.charAt(1) - '0');
+        int col = pos.charAt(0) - 'a' + 1;
+        int row = '8' - (pos.charAt(1)) + 1;
 
-        if (col < 0 || col >= BOARD_SIZE_IN_SQUARES || row < 0 || row >= BOARD_SIZE_IN_SQUARES) {
+        if (col < 1 || col >= BOARD_SIZE_IN_SQUARES || row < 1 || row >= BOARD_SIZE_IN_SQUARES) {
             throw new IllegalArgumentException("Position out of bounds");
         }
         return new ChessPosition(row, col);

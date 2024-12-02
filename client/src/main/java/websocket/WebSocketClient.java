@@ -1,5 +1,7 @@
 package websocket;
 import com.google.gson.Gson;
+
+import com.google.gson.GsonBuilder;
 import websocket.messages.ServerMessage;
 import websocket.commands.UserGameCommand;
 
@@ -14,7 +16,9 @@ public class WebSocketClient extends Endpoint {
 
     public WebSocketClient(String serverUrl, ServerMessageHandler handler) throws Exception {
         this.messageHandler = handler;
-        this.gson = new Gson();
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(ServerMessage.class, new ServerMessageDeserializer())
+                .create();
 
         URI uri = new URI(serverUrl);
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
