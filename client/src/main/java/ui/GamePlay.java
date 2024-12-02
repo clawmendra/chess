@@ -28,7 +28,6 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private Collection<ChessMove> highlightedMoves = new ArrayList<>();
     private ChessPosition highlightedPosition = null;
     private boolean hasPlayerResigned = false;
-    private boolean hasPlayerResigned = false;
     private boolean gameLoaded = false;
 
     public GamePlay(GameData gameData, WebSocketClient webSocketClient, boolean isWhitePlayer, AuthData authData) {
