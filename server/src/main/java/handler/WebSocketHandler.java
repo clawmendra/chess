@@ -1,12 +1,14 @@
 package handler;
 
 import chess.*;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.AuthData;
+
 import model.GameData;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.eclipse.jetty.websocket.api.Session;
@@ -25,7 +27,6 @@ public class WebSocketHandler {
     private final DataAccess dataAccess;
     private static final Gson gson = new Gson();
     private final Set<Integer> resignedGames = new ConcurrentHashSet<>();
-
     private static class Connection {
         public String username;
         public Integer gameID;
@@ -44,6 +45,7 @@ public class WebSocketHandler {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         if (session != null) {
+            // Initialize with empty connection object instead of null
             connections.put(session, new Connection(null, null));
             System.out.println("Client connected to websocket");
         }
@@ -67,18 +69,34 @@ public class WebSocketHandler {
     public void onMessage(Session session, String message) {
         try {
             System.out.println("Received message: " + message);
+            // Create a new Gson instance that knows about MakeMoveCommand
+            Gson gson = new Gson();
             JsonObject jsonObject = JsonParser.parseString(message).getAsJsonObject();
+
             UserGameCommand.CommandType commandType = UserGameCommand.CommandType.valueOf(jsonObject.get("commandType").getAsString());
 
-            UserGameCommand command = (commandType == UserGameCommand.CommandType.MAKE_MOVE)
-                    ? gson.fromJson(message, MakeMoveCommand.class)
-                    : gson.fromJson(message, UserGameCommand.class);
+            UserGameCommand command;
+            if (commandType == UserGameCommand.CommandType.MAKE_MOVE) {
+                // Parse as MakeMoveCommand
+                command = gson.fromJson(message, MakeMoveCommand.class);
+            } else {
+                // Parse as regular UserGameCommand
+                command = gson.fromJson(message, UserGameCommand.class);
+            }
 
             switch (command.getCommandType()) {
-                case CONNECT -> handleConnect(session, command);
-                case MAKE_MOVE -> handleMove(session, (MakeMoveCommand) command);
-                case LEAVE -> handleLeave(session, command);
-                case RESIGN -> handleResign(session, command);
+                case CONNECT:
+                    handleConnect(session, command);
+                    break;
+                case MAKE_MOVE:
+                    handleMove(session, (MakeMoveCommand) command);
+                    break;
+                case LEAVE:
+                    handleLeave(session, command);
+                    break;
+                case RESIGN:
+                    handleResign(session, command);
+                    break;
             }
         } catch (Exception e) {
             System.err.println("Error processing message: " + e.getMessage());
@@ -89,42 +107,88 @@ public class WebSocketHandler {
 
     private void handleResign(Session session, UserGameCommand command) {
         try {
-            GameSession context = validateGameSession(session, command);
-            if (!context.isValid()) return;
+            Connection conn = connections.get(session);
+            if (conn == null) {
+                sendError(session, "Error: Not connected to a game");
+                return;
+            }
 
+            // Check if game is already over due to resignation
             if (resignedGames.contains(command.getGameID())) {
                 sendError(session, "Error: Game is already over");
                 return;
             }
 
-            if (!isPlayerInGame(context.gameData(), context.connection().username)) {
+            // Get the game
+            GameData gameData = dataAccess.getGame(command.getGameID());
+            if (gameData == null) {
+                sendError(session, "Error: Game not found");
+                return;
+            }
+
+            // Only players can resign
+            if (!conn.username.equals(gameData.whiteUsername()) &&
+                    !conn.username.equals(gameData.blackUsername())) {
                 sendError(session, "Error: Only players can resign");
                 return;
             }
 
+            // Mark game as resigned
             resignedGames.add(command.getGameID());
-            broadcastToAll(command.getGameID(),
-                    new NotificationMessage(context.connection().username + " has resigned"));
+
+            // Notify all clients about resignation
+            String notification = String.format("%s has resigned", conn.username);
+            broadcastToAll(command.getGameID(), new NotificationMessage(notification));
 
         } catch (Exception e) {
             sendError(session, "Error resigning: " + e.getMessage());
         }
     }
-
     private void handleLeave(Session session, UserGameCommand command) {
         try {
-            GameSession context = validateGameSession(session, command);
-            if (!context.isValid()) return;
+            Connection conn = connections.get(session);
+            if (conn == null) {
+                sendError(session, "Error: Not connected to a game");
+                return;
+            }
 
-            GameData updatedGameData = createUpdatedGameData(context.gameData(), context.connection().username);
+            // Get current game state
+            GameData currentGameData = dataAccess.getGame(command.getGameID());
+            if (currentGameData == null) {
+                sendError(session, "Error: Game not found");
+                return;
+            }
+            // Create new GameData, removing player that left
+            GameData updatedGameData;
+            if (conn.username.equals(currentGameData.whiteUsername())) {
+                updatedGameData = new GameData(
+                        currentGameData.gameID(),
+                        null,  // Remove white player
+                        currentGameData.blackUsername(),
+                        currentGameData.gameName(),
+                        currentGameData.game()
+                );
+            } else if (conn.username.equals(currentGameData.blackUsername())) {
+                updatedGameData = new GameData(
+                        currentGameData.gameID(),
+                        currentGameData.whiteUsername(),
+                        null,  // Remove black player
+                        currentGameData.gameName(),
+                        currentGameData.game()
+                );
+            } else {
+                // Observer leaving - no need to update game data
+                updatedGameData = currentGameData;
+            }
 
-            if (!updatedGameData.equals(context.gameData())) {
+            // Update game in database if player left (not just observer)
+            if (!updatedGameData.equals(currentGameData)) {
                 dataAccess.updateGame(updatedGameData);
             }
 
             connections.remove(session);
             broadcastNotification(command.getGameID(), session,
-                    String.format("%s left the game", context.connection().username));
+                    String.format("%s left the game", conn.username));
 
         } catch (Exception e) {
             sendError(session, "Error leaving game: " + e.getMessage());
@@ -133,166 +197,158 @@ public class WebSocketHandler {
 
     private void handleMove(Session session, MakeMoveCommand moveCommand) {
         try {
-            GameSession context = validateGameSession(session, moveCommand);
-            if (!context.isValid()) return;
+            Connection conn = connections.get(session);
+            if (conn == null) {
+                sendError(session, "Error: Not connected to a game");
+                return;
+            }
 
-            if (!validateAuthToken(moveCommand.getAuthToken(), context.connection().username)) {
+            // Verify auth token first
+            try {
+                AuthData auth = dataAccess.getAuth(moveCommand.getAuthToken());
+                if (auth == null || !auth.username().equals(conn.username)) {
+                    sendError(session, "Error: Invalid auth token");
+                    return;
+                }
+            } catch (DataAccessException e) {
                 sendError(session, "Error: Invalid auth token");
                 return;
             }
 
-            if (isGameOver(context.gameData(), moveCommand.getGameID())) {
+            // Get current game state
+            GameData gameData = dataAccess.getGame(moveCommand.getGameID());
+            if (gameData == null) {
+                sendError(session, "Error: Game not found");
+                return;
+            }
+
+            // Check if game has been resigned
+            if (resignedGames.contains(moveCommand.getGameID())) {
+                sendError(session, "Error: Game is already over");
+                return;
+            }
+            ChessGame game = gameData.game();
+
+            // Check if game is over (resigned or checkmate)
+            if (game.isInCheckmate(ChessGame.TeamColor.WHITE) ||
+                    game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
                 sendError(session, "Error: Game is already over");
                 return;
             }
 
-            ChessGame game = context.gameData().game();
-            if (!validateMove(game, context.gameData(), context.connection().username, moveCommand.getMove())) {
+            // Verify it's the player's turn and they're a player (not observer)
+            boolean isWhiteMove = game.getTeamTurn() == ChessGame.TeamColor.WHITE;
+            if ((isWhiteMove && !conn.username.equals(gameData.whiteUsername())) ||
+                    (!isWhiteMove && !conn.username.equals(gameData.blackUsername()))) {
+                sendError(session, "Error: Not your turn");
                 return;
             }
 
-            game.makeMove(moveCommand.getMove());
+            // Make sure they're moving their own piece
+            ChessPosition startPos = moveCommand.getMove().getStartPosition();
+            ChessPiece piece = game.getBoard().getPiece(startPos);
+            if (piece == null) {
+                sendError(session, "Error: No piece at start position");
+                return;
+            }
 
+            boolean isWhitePiece = piece.getTeamColor() == ChessGame.TeamColor.WHITE;
+            if ((isWhitePiece && !conn.username.equals(gameData.whiteUsername())) ||
+                    (!isWhitePiece && !conn.username.equals(gameData.blackUsername()))) {
+                sendError(session, "Error: Can't move opponent's pieces");
+                return;
+            }
+
+            // Make the move
+            try {
+                game.makeMove(moveCommand.getMove());
+            } catch (InvalidMoveException e) {
+                sendError(session, "Error: Invalid move");
+                return;
+            }
+
+            // Update game in database
             GameData updatedGameData = new GameData(
-                    context.gameData().gameID(),
-                    context.gameData().whiteUsername(),
-                    context.gameData().blackUsername(),
-                    context.gameData().gameName(),
+                    gameData.gameID(),
+                    gameData.whiteUsername(),
+                    gameData.blackUsername(),
+                    gameData.gameName(),
                     game
             );
             dataAccess.updateGame(updatedGameData);
 
-            broadcastToAll(moveCommand.getGameID(), new LoadGameMessage(game));
-            broadcastMoveNotification(context, moveCommand);
-            broadcastGameStatus(game, moveCommand.getGameID());
+            // Send updated game state to all clients
+            LoadGameMessage gameMessage = new LoadGameMessage(game);
+            broadcastToAll(moveCommand.getGameID(), gameMessage);
 
-        } catch (InvalidMoveException e) {
-            sendError(session, "Error: Invalid move");
+            // Notify about the move
+            String moveNotification = String.format("%s moved from %s to %s",
+                    conn.username, moveCommand.getMove().getStartPosition(),
+                    moveCommand.getMove().getEndPosition());
+            broadcastNotification(moveCommand.getGameID(), session, moveNotification);
+
+            // Check for check/checkmate
+            if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+                broadcastToAll(moveCommand.getGameID(),
+                        new NotificationMessage("White is in checkmate!"));
+            } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+                broadcastToAll(moveCommand.getGameID(),
+                        new NotificationMessage("Black is in checkmate!"));
+            } else if (game.isInCheck(ChessGame.TeamColor.WHITE)) {
+                broadcastToAll(moveCommand.getGameID(),
+                        new NotificationMessage("White is in check!"));
+            } else if (game.isInCheck(ChessGame.TeamColor.BLACK)) {
+                broadcastToAll(moveCommand.getGameID(),
+                        new NotificationMessage("Black is in check!"));
+            }
         } catch (Exception e) {
             sendError(session, "Error making move: " + e.getMessage());
         }
     }
 
+    // Helper method for broadcasting to all clients in a game
+    private void broadcastToAll(Integer gameID, ServerMessage message) {
+        for (Map.Entry<Session, Connection> entry : connections.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().gameID.equals(gameID)) {
+                sendToSession(entry.getKey(), message);
+            }
+        }
+    }
+
     private void handleConnect(Session session, UserGameCommand command) {
         try {
-            AuthData auth = validateAuthToken(command.getAuthToken());
+            // First validate the auth token using getAuth
+            AuthData auth = dataAccess.getAuth(command.getAuthToken());
             if (auth == null) {
                 sendError(session, "Error: Invalid auth token");
                 return;
             }
 
-            GameData gameData = getGameData(command.getGameID());
+            // Get the game
+            GameData gameData = dataAccess.getGame(command.getGameID());
             if (gameData == null) {
                 sendError(session, "Error: Game not found");
                 return;
             }
 
+            // Store connection info
             connections.put(session, new Connection(auth.username(), command.getGameID()));
-            sendToSession(session, new LoadGameMessage(gameData.game()));
 
+            // Send game state to connecting client
+            LoadGameMessage gameMessage = new LoadGameMessage(gameData.game());
+            sendToSession(session, gameMessage);
+
+            // Determine if player or observer
             String role = determineRole(gameData, auth.username());
-            broadcastNotification(command.getGameID(), session,
-                    String.format("%s connected as %s", auth.username(), role));
+            String notification = String.format("%s connected as %s", auth.username(), role);
 
+            // Notify other clients
+            broadcastNotification(command.getGameID(), session, notification);
+
+        } catch (DataAccessException e) {
+            sendError(session, "Error: Invalid auth token");
         } catch (Exception e) {
             sendError(session, "Error: " + e.getMessage());
-        }
-    }
-
-
-    private record GameSession(Connection connection, GameData gameData, boolean isValid) {}
-
-    private GameSession validateGameSession(Session session, UserGameCommand command) {
-        Connection conn = connections.get(session);
-        if (conn == null) {
-            sendError(session, "Error: Not connected to a game");
-            return new GameSession(null, null, false);
-        }
-
-        try {
-            GameData gameData = dataAccess.getGame(command.getGameID());
-            if (gameData == null) {
-                sendError(session, "Error: Game not found");
-                return new GameSession(conn, null, false);
-            }
-            return new GameSession(conn, gameData, true);
-        } catch (DataAccessException e) {
-            sendError(session, "Error: Cannot access game data");
-            return new GameSession(conn, null, false);
-        }
-    }
-
-    private boolean validateAuthToken(String token, String username) {
-        try {
-            AuthData auth = dataAccess.getAuth(token);
-            return auth != null && auth.username().equals(username);
-        } catch (DataAccessException e) {
-            return false;
-        }
-    }
-
-    private AuthData validateAuthToken(String token) throws DataAccessException {
-        return dataAccess.getAuth(token);
-    }
-
-    private GameData getGameData(int gameId) throws DataAccessException {
-        return dataAccess.getGame(gameId);
-    }
-
-    private boolean isGameOver(GameData gameData, int gameId) {
-        ChessGame game = gameData.game();
-        return resignedGames.contains(gameId) ||
-                game.isInCheckmate(ChessGame.TeamColor.WHITE) ||
-                game.isInCheckmate(ChessGame.TeamColor.BLACK);
-    }
-
-    private boolean validateMove(ChessGame game, GameData gameData, String username, ChessMove move) {
-        boolean isWhiteMove = game.getTeamTurn() == ChessGame.TeamColor.WHITE;
-        if ((isWhiteMove && !username.equals(gameData.whiteUsername())) ||
-                (!isWhiteMove && !username.equals(gameData.blackUsername()))) {
-            return false;
-        }
-
-        ChessPiece piece = game.getBoard().getPiece(move.getStartPosition());
-        if (piece == null) return false;
-
-        boolean isWhitePiece = piece.getTeamColor() == ChessGame.TeamColor.WHITE;
-        return (isWhitePiece && username.equals(gameData.whiteUsername())) ||
-                (!isWhitePiece && username.equals(gameData.blackUsername()));
-    }
-
-    private GameData createUpdatedGameData(GameData currentGame, String leavingPlayer) {
-        if (leavingPlayer.equals(currentGame.whiteUsername())) {
-            return new GameData(currentGame.gameID(), null, currentGame.blackUsername(),
-                    currentGame.gameName(), currentGame.game());
-        } else if (leavingPlayer.equals(currentGame.blackUsername())) {
-            return new GameData(currentGame.gameID(), currentGame.whiteUsername(), null,
-                    currentGame.gameName(), currentGame.game());
-        }
-        return currentGame;
-    }
-
-    private boolean isPlayerInGame(GameData game, String username) {
-        return username.equals(game.whiteUsername()) || username.equals(game.blackUsername());
-    }
-
-    private void broadcastMoveNotification(GameSession context, MakeMoveCommand moveCommand) {
-        String moveNotification = String.format("%s moved from %s to %s",
-                context.connection().username,
-                moveCommand.getMove().getStartPosition(),
-                moveCommand.getMove().getEndPosition());
-        broadcastNotification(moveCommand.getGameID(), null, moveNotification);
-    }
-
-    private void broadcastGameStatus(ChessGame game, int gameId) {
-        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-            broadcastToAll(gameId, new NotificationMessage("White is in checkmate!"));
-        } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-            broadcastToAll(gameId, new NotificationMessage("Black is in checkmate!"));
-        } else if (game.isInCheck(ChessGame.TeamColor.WHITE)) {
-            broadcastToAll(gameId, new NotificationMessage("White is in check!"));
-        } else if (game.isInCheck(ChessGame.TeamColor.BLACK)) {
-            broadcastToAll(gameId, new NotificationMessage("Black is in check!"));
         }
     }
 
@@ -307,14 +363,6 @@ public class WebSocketHandler {
             session.getRemote().sendString(gson.toJson(message));
         } catch (Exception e) {
             System.err.println("Error sending message: " + e.getMessage());
-        }
-    }
-
-    private void broadcastToAll(Integer gameID, ServerMessage message) {
-        for (Map.Entry<Session, Connection> entry : connections.entrySet()) {
-            if (entry.getValue() != null && entry.getValue().gameID.equals(gameID)) {
-                sendToSession(entry.getKey(), message);
-            }
         }
     }
 
