@@ -81,7 +81,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 displayGame();
                 break;
             case ERROR:
-                String errorMsg = ((ErrorMessage)message).getErrorMessage();
+                String errorMsg = ((ErrorMessage) message).getErrorMessage();
                 out.println("Error: " + errorMsg);
                 // If this was a move error, we might want to redisplay the board
                 if (errorMsg.contains("invalid move")) {
@@ -89,7 +89,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 }
                 break;
             case NOTIFICATION:
-                NotificationMessage notificationMessage = (NotificationMessage)message;
+                NotificationMessage notificationMessage = (NotificationMessage) message;
                 out.println("\nNotification: " + notificationMessage.getMessage());
                 // Handle game state changes for notifications
                 handleGameStateChange(notificationMessage);
@@ -98,10 +98,10 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     }
 
     private void displayGame() {
-       if (!gameLoaded) {
-           out.println("Game Loading...");
-           return;
-       }
+        if (!gameLoaded) {
+            out.println("Game Loading...");
+            return;
+        }
         out.print(ERASE_SCREEN);
         out.print(SET_BG_COLOR_BLACK);  // Reset background to black
         out.print(SET_TEXT_COLOR_WHITE); // Reset text to white
@@ -166,17 +166,35 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     }
 
     private void handleCommand() {
-        if (!isGameActive() && !gameData.gameName().equals("help") && !gameData.gameName().equals("leave")) {
-            out.println("Game is over. You can only use 'help' or 'leave' commands.");
-            return;
-        }
         out.print("Enter command: ");
         String input = scanner.nextLine().trim().toLowerCase();
         String[] parts = input.split("\\s+");
 
+        if (parts.length == 0) {
+            return;
+        }
+
+        // Handle commands that should always be available first
+        switch (parts[0]) {
+            case "help" -> {
+                displayHelp();
+                return;
+            }
+            case "leave" -> {
+                handleLeave();
+                return;
+            }
+        }
+
+        // Then check if game is active for other commands
+        if (!isGameActive()) {
+            out.println("Game is over. You can only use 'help' or 'leave' commands.");
+            return;
+        }
+
+        // Handle gameplay commands
         try {
             switch (parts[0]) {
-                case "help" -> displayHelp();
                 case "redraw" -> displayGame();
                 case "move" -> {
                     if (parts.length != 3) {
@@ -193,7 +211,6 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                     highlightLegalMoves(parts[1]);
                 }
                 case "resign" -> handleResign();
-                case "leave" -> handleLeave();
                 default -> out.println("Unknown command. Type 'help' for available commands.");
             }
         } catch (Exception e) {
@@ -261,7 +278,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private void handleLeave() {
         sendCommand(CommandType.LEAVE);
         out.println("You have left the game.");
-        out.print("Type 'help' to display options.");
+        out.print("Type 'help' to display options.\n");
         isPlaying = false;
     }
 
@@ -277,8 +294,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
         // Draw each row
         for (int row = 0; row < BOARD_SIZE_IN_SQUARES; row++) {
             // Display row numbers from 8 to 1
-            int displayRank = BOARD_SIZE_IN_SQUARES - row;
-
+            int displayRank = isWhitePlayer ? (BOARD_SIZE_IN_SQUARES - row) : (row + 1);
             // Draw the row number on the left
             out.print(SET_BG_COLOR_BLACK);
             out.print(SET_TEXT_COLOR_WHITE);
@@ -300,10 +316,13 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
 
     private void paintRow(int row) {
         for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
-            boolean isLightSquare = (row + col) % 2 == 0;
+            int displayRow = isWhitePlayer ? row : (BOARD_SIZE_IN_SQUARES - 1 - row);
+            int displayCol = isWhitePlayer ? col : (BOARD_SIZE_IN_SQUARES - 1 - col);
+
+            boolean isLightSquare = (displayRow + displayCol) % 2 == 0;
 
             // Create chess position
-            ChessPosition position = new ChessPosition(8 - row, col + 1);
+            ChessPosition position = new ChessPosition(8 - displayRow, displayCol + 1);
             // Set background color
             if (isPositionHighlighted(position)) {
                 if (isLightSquare) {
@@ -338,7 +357,8 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
 
 
     private boolean isPositionHighlighted(ChessPosition pos) {
-        if (highlightedPosition != null && highlightedPosition.equals(pos)) return true; {
+        if (highlightedPosition != null && highlightedPosition.equals(pos)) return true;
+        {
             return highlightedMoves.stream().anyMatch(move -> move.getEndPosition().equals(pos));
         }
     }
@@ -357,7 +377,8 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
     private void drawHeader() {
         out.print("   ");
         for (int col = 0; col < BOARD_SIZE_IN_SQUARES; col++) {
-            char letter = (char)('a' + (isWhitePlayer ? col : (BOARD_SIZE_IN_SQUARES - 1 - col)));
+            int displayCol = isWhitePlayer ? col : (BOARD_SIZE_IN_SQUARES - 1 - col);
+            char letter = (char) ('a' + displayCol);
             out.print(SET_BG_COLOR_BLACK);
             out.print(SET_TEXT_COLOR_WHITE);
             out.print("  " + letter + "  ");
@@ -370,12 +391,14 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             throw new IllegalArgumentException("Invalid position format. Use letter+number (ex: 'e2')");
         }
 
-        int col = pos.charAt(0) - 'a' + 1;
-        int row = '8' - (pos.charAt(1)) + 1;
+        int col = pos.charAt(0) - 'a' + 1;  // Convert file (a-h) to column number (1-8)
+        int row = pos.charAt(1) - '0';      // Get the actual number from the input
 
-        if (col < 1 || col >= BOARD_SIZE_IN_SQUARES || row < 1 || row >= BOARD_SIZE_IN_SQUARES) {
+        // Validate position
+        if (col < 1 || col > BOARD_SIZE_IN_SQUARES || row < 1 || row > BOARD_SIZE_IN_SQUARES) {
             throw new IllegalArgumentException("Position out of bounds");
         }
+
         return new ChessPosition(row, col);
     }
-    }
+}
