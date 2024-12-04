@@ -199,7 +199,7 @@ public class WebSocketHandler {
         try {
             Connection conn = connections.get(session);
             if (conn == null) {
-                sendError(session, "Error: Not connected to a game");
+                sendError(session, "Not connected to a game");
                 return;
             }
 
@@ -207,24 +207,24 @@ public class WebSocketHandler {
             try {
                 AuthData auth = dataAccess.getAuth(moveCommand.getAuthToken());
                 if (auth == null || !auth.username().equals(conn.username)) {
-                    sendError(session, "Error: Invalid auth token");
+                    sendError(session, "Invalid auth token");
                     return;
                 }
             } catch (DataAccessException e) {
-                sendError(session, "Error: Invalid auth token");
+                sendError(session, "Invalid auth token");
                 return;
             }
 
             // Get current game state
             GameData gameData = dataAccess.getGame(moveCommand.getGameID());
             if (gameData == null) {
-                sendError(session, "Error: Game not found");
+                sendError(session, "Game not found");
                 return;
             }
 
             // Check if game has been resigned
             if (resignedGames.contains(moveCommand.getGameID())) {
-                sendError(session, "Error: Game is already over");
+                sendError(session, "Game is already over");
                 return;
             }
             ChessGame game = gameData.game();
@@ -232,7 +232,7 @@ public class WebSocketHandler {
             // Check if game is over (resigned or checkmate)
             if (game.isInCheckmate(ChessGame.TeamColor.WHITE) ||
                     game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                sendError(session, "Error: Game is already over");
+                sendError(session, "Game is already over");
                 return;
             }
 
@@ -240,7 +240,7 @@ public class WebSocketHandler {
             boolean isWhiteMove = game.getTeamTurn() == ChessGame.TeamColor.WHITE;
             if ((isWhiteMove && !conn.username.equals(gameData.whiteUsername())) ||
                     (!isWhiteMove && !conn.username.equals(gameData.blackUsername()))) {
-                sendError(session, "Error: Not your turn");
+                sendError(session, "Not your turn");
                 return;
             }
 
@@ -248,14 +248,14 @@ public class WebSocketHandler {
             ChessPosition startPos = moveCommand.getMove().getStartPosition();
             ChessPiece piece = game.getBoard().getPiece(startPos);
             if (piece == null) {
-                sendError(session, "Error: No piece at start position");
+                sendError(session, "No piece at start position");
                 return;
             }
 
             boolean isWhitePiece = piece.getTeamColor() == ChessGame.TeamColor.WHITE;
             if ((isWhitePiece && !conn.username.equals(gameData.whiteUsername())) ||
                     (!isWhitePiece && !conn.username.equals(gameData.blackUsername()))) {
-                sendError(session, "Error: Can't move opponent's pieces");
+                sendError(session, "Can't move opponent's pieces");
                 return;
             }
 
@@ -263,7 +263,7 @@ public class WebSocketHandler {
             try {
                 game.makeMove(moveCommand.getMove());
             } catch (InvalidMoveException e) {
-                sendError(session, "Error: Invalid move");
+                sendError(session, "Invalid move");
                 return;
             }
 
