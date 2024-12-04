@@ -80,10 +80,6 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             case ERROR:
                 String errorMsg = ((ErrorMessage) message).getErrorMessage();
                 out.println(errorMsg);
-                // If this was a move error, we might want to redisplay the board
-                if (errorMsg.contains("invalid move")) {
-                    displayGame();
-                }
                 break;
             case NOTIFICATION:
                 NotificationMessage notificationMessage = (NotificationMessage) message;
