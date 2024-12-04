@@ -70,18 +70,16 @@ public class WebSocketHandler {
         try {
             System.out.println("Received message: " + message);
             // Create a new Gson instance that knows about MakeMoveCommand
-            Gson GSON = new Gson();
+            Gson gson = new Gson();
             JsonObject jsonObject = JsonParser.parseString(message).getAsJsonObject();
 
             UserGameCommand.CommandType commandType = UserGameCommand.CommandType.valueOf(jsonObject.get("commandType").getAsString());
 
             UserGameCommand command;
             if (commandType == UserGameCommand.CommandType.MAKE_MOVE) {
-                // Parse as MakeMoveCommand
-                command = GSON.fromJson(message, MakeMoveCommand.class);
+                command = gson.fromJson(message, MakeMoveCommand.class);
             } else {
-                // Parse as regular UserGameCommand
-                command = GSON.fromJson(message, UserGameCommand.class);
+                command = gson.fromJson(message, UserGameCommand.class);
             }
 
             switch (command.getCommandType()) {
@@ -135,8 +133,6 @@ public class WebSocketHandler {
 
             // Mark game as resigned
             resignedGames.add(command.getGameID());
-
-            // Notify all clients about resignation
             String notification = String.format("%s has resigned", conn.username);
             broadcastToAll(command.getGameID(), new NotificationMessage(notification));
 
@@ -144,6 +140,7 @@ public class WebSocketHandler {
             sendError(session, "Error resigning: " + e.getMessage());
         }
     }
+
     private void handleLeave(Session session, UserGameCommand command) {
         try {
             Connection conn = connections.get(session);
