@@ -283,8 +283,9 @@ public class WebSocketHandler {
 
             // Notify about the move
             String moveNotification = String.format("%s moved from %s to %s",
-                    conn.username, moveCommand.getMove().getStartPosition(),
-                    moveCommand.getMove().getEndPosition());
+                    conn.username,
+                    formatChessPos(moveCommand.getMove().getStartPosition()),
+                    formatChessPos(moveCommand.getMove().getEndPosition()));
             broadcastNotification(moveCommand.getGameID(), session, moveNotification);
 
             // Check for check/checkmate
@@ -304,6 +305,13 @@ public class WebSocketHandler {
         } catch (Exception e) {
             sendError(session, "Error making move: " + e.getMessage());
         }
+    }
+
+    // Helper to format moves
+    private String formatChessPos(ChessPosition position) {
+        char col = (char) ('a' + position.getColumn() - 1);
+        int row = position.getRow();
+        return String.format("%c%d", col, row);
     }
 
     // Helper method for broadcasting to all clients in a game

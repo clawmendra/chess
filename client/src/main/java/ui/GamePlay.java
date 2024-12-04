@@ -60,9 +60,6 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
             // Now start the game UI loop
             Thread.sleep(1000);
             displayHelp();
-            if (gameLoaded) {
-                displayGame();
-            }
             while (isPlaying) {
                 handleCommand();
             }
@@ -82,7 +79,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 break;
             case ERROR:
                 String errorMsg = ((ErrorMessage) message).getErrorMessage();
-                out.println("Error: " + errorMsg);
+                out.println(errorMsg);
                 // If this was a move error, we might want to redisplay the board
                 if (errorMsg.contains("invalid move")) {
                     displayGame();
@@ -214,7 +211,7 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
                 default -> out.println("Unknown command. Type 'help' for available commands.");
             }
         } catch (Exception e) {
-            out.println("Error: " + e.getMessage());
+            out.println(e.getMessage());
         }
     }
 

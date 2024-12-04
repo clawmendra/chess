@@ -1,6 +1,5 @@
 package ui;
 
-import chess.ChessGame;
 import model.AuthData;
 import model.GameData;
 import client.ServerFacade;
@@ -59,35 +58,6 @@ public class PostLogin {
         info.append(" | White: ").append(whitePlayer);
         info.append(" | Black: ").append(blackPlayer);
         return info.toString();
-    }
-
-    public static void playGame(ServerFacade server, AuthData authData, Scanner scanner) throws Exception {
-        if (!areGamesAvailable()) {
-            System.out.println("Sorry, there aren't any games to play");
-            return;
-        }
-
-        GameData selectedGame = selectGame(scanner);
-        if (selectedGame == null) {
-            return;
-        }
-
-        if (isGameFull(selectedGame)) {
-            System.out.println("This game is full.");
-            System.out.println("Type 'observe' to watch this game or 'create' to start a new one.");
-            return;
-        }
-
-        String color = getPlayerColor(scanner, selectedGame);
-        if (color == null) {
-            return;
-        }
-
-        joinDisplay(server, authData, selectedGame, color);
-    }
-
-    private static boolean areGamesAvailable() {
-        return gamesList != null && gamesList.length > 0;
     }
 
     private static GameData selectGame(Scanner scanner) {
@@ -150,27 +120,73 @@ public class PostLogin {
     }
 
 
+    public static void playGame(ServerFacade server, AuthData authData, Scanner scanner) throws Exception {
+        // Fetch latest games list
+        gamesList = server.listGames(authData.authToken());
+
+        if (gamesList.length == 0) {
+            System.out.println("Sorry, there aren't any games to play");
+            return;
+        }
+
+        // Display available games
+        System.out.println("Available games:");
+        for (int i = 0; i < gamesList.length; i++) {
+            GameData game = gamesList[i];
+            System.out.printf("%d. %s%n", i + 1, formatGame(game));
+        }
+
+        GameData selectedGame = selectGame(scanner);
+        if (selectedGame == null) {
+            return;
+        }
+
+        if (isGameFull(selectedGame)) {
+            System.out.println("This game is full.");
+            System.out.println("Type 'observe' to watch this game or 'create' to start a new one.");
+            return;
+        }
+
+        String color = getPlayerColor(scanner, selectedGame);
+        if (color == null) {
+            return;
+        }
+
+        joinDisplay(server, authData, selectedGame, color);
+    }
+
     public static void observeGame(ServerFacade server, AuthData authData, Scanner scanner) {
-        if (gamesList == null || gamesList.length == 0) {
-            System.out.println("Sorry, no available games to observe");
-            return;
-        }
-        System.out.print("Enter game number you want to observe: ");
-        int gameNum;
         try {
-            gameNum = Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid game number. Please enter a valid number.");
-            return;
-        }
+            // Fetch latest games list
+            gamesList = server.listGames(authData.authToken());
 
-        if (gameNum < 1 || gameNum > gamesList.length) {
-            System.out.println("Invalid game number.");
-            return;
-        }
+            if (gamesList.length == 0) {
+                System.out.println("Sorry, no available games to observe");
+                return;
+            }
 
-        GameData gamePicked = gamesList[gameNum - 1];
-        try {
+            // Display available games
+            System.out.println("Available games:");
+            for (int i = 0; i < gamesList.length; i++) {
+                GameData game = gamesList[i];
+                System.out.printf("%d. %s%n", i + 1, formatGame(game));
+            }
+
+            System.out.print("Enter game number you want to observe: ");
+            int gameNum;
+            try {
+                gameNum = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid game number. Please enter a valid number.");
+                return;
+            }
+
+            if (gameNum < 1 || gameNum > gamesList.length) {
+                System.out.println("Invalid game number.");
+                return;
+            }
+
+            GameData gamePicked = gamesList[gameNum - 1];
             GamePlay gamePlay = new GamePlay(gamePicked, null, true, authData);
             WebSocketClient webSocketClient = server.initWebSocket(gamePlay);
             gamePlay.setWebSocketClient(webSocketClient);
