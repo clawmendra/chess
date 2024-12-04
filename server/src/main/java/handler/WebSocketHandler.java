@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketHandler {
     private final Map<Session, Connection> connections;
     private final DataAccess dataAccess;
-    private static final Gson gson = new Gson();
+    private static final Gson GSON  = new Gson();
     private final Set<Integer> resignedGames = new ConcurrentHashSet<>();
     private static class Connection {
         public String username;
@@ -70,7 +70,7 @@ public class WebSocketHandler {
         try {
             System.out.println("Received message: " + message);
             // Create a new Gson instance that knows about MakeMoveCommand
-            Gson gson = new Gson();
+            Gson GSON = new Gson();
             JsonObject jsonObject = JsonParser.parseString(message).getAsJsonObject();
 
             UserGameCommand.CommandType commandType = UserGameCommand.CommandType.valueOf(jsonObject.get("commandType").getAsString());
@@ -78,10 +78,10 @@ public class WebSocketHandler {
             UserGameCommand command;
             if (commandType == UserGameCommand.CommandType.MAKE_MOVE) {
                 // Parse as MakeMoveCommand
-                command = gson.fromJson(message, MakeMoveCommand.class);
+                command = GSON.fromJson(message, MakeMoveCommand.class);
             } else {
                 // Parse as regular UserGameCommand
-                command = gson.fromJson(message, UserGameCommand.class);
+                command = GSON.fromJson(message, UserGameCommand.class);
             }
 
             switch (command.getCommandType()) {
@@ -195,69 +195,83 @@ public class WebSocketHandler {
         }
     }
 
+    // Break out validation into its own method
+    private void validateMoveRequest(Session session, MakeMoveCommand moveCommand, Connection conn) throws Exception {
+        // Validate connection
+        if (conn == null) {
+            throw new Exception("Not connected to a game");
+        }
+
+        // Verify auth token
+        AuthData auth = dataAccess.getAuth(moveCommand.getAuthToken());
+        if (auth == null || !auth.username().equals(conn.username)) {
+            throw new Exception("Invalid auth token");
+        }
+
+        // Get current game state
+        GameData gameData = dataAccess.getGame(moveCommand.getGameID());
+        if (gameData == null) {
+            throw new Exception("Game not found");
+        }
+
+        // Check if game has been resigned
+        if (resignedGames.contains(moveCommand.getGameID())) {
+            throw new Exception("Game is already over");
+        }
+
+        ChessGame game = gameData.game();
+
+        // Check if game is over
+        if (game.isInCheckmate(ChessGame.TeamColor.WHITE) ||
+                game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            throw new Exception("Game is already over");
+        }
+
+        // Verify it's the player's turn
+        boolean isWhiteMove = game.getTeamTurn() == ChessGame.TeamColor.WHITE;
+        if ((isWhiteMove && !conn.username.equals(gameData.whiteUsername())) ||
+                (!isWhiteMove && !conn.username.equals(gameData.blackUsername()))) {
+            throw new Exception("Not your turn");
+        }
+
+        // Validate piece ownership
+        ChessPosition startPos = moveCommand.getMove().getStartPosition();
+        ChessPiece piece = game.getBoard().getPiece(startPos);
+        if (piece == null) {
+            throw new Exception("No piece at start position");
+        }
+
+        boolean isWhitePiece = piece.getTeamColor() == ChessGame.TeamColor.WHITE;
+        if ((isWhitePiece && !conn.username.equals(gameData.whiteUsername())) ||
+                (!isWhitePiece && !conn.username.equals(gameData.blackUsername()))) {
+            throw new Exception("Can't move opponent's pieces");
+        }
+    }
+
+    // Break out game state check and notifications into a method
+    private void handleGameStateNotifications(ChessGame game, int gameID) {
+        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            broadcastToAll(gameID, new NotificationMessage("White is in checkmate!"));
+        } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            broadcastToAll(gameID, new NotificationMessage("Black is in checkmate!"));
+        } else if (game.isInCheck(ChessGame.TeamColor.WHITE)) {
+            broadcastToAll(gameID, new NotificationMessage("White is in check!"));
+        } else if (game.isInCheck(ChessGame.TeamColor.BLACK)) {
+            broadcastToAll(gameID, new NotificationMessage("Black is in check!"));
+        }
+    }
+
+    // Main handleMove method is now shorter and more focused
     private void handleMove(Session session, MakeMoveCommand moveCommand) {
         try {
             Connection conn = connections.get(session);
-            if (conn == null) {
-                sendError(session, "Not connected to a game");
-                return;
-            }
 
-            // Verify auth token first
-            try {
-                AuthData auth = dataAccess.getAuth(moveCommand.getAuthToken());
-                if (auth == null || !auth.username().equals(conn.username)) {
-                    sendError(session, "Invalid auth token");
-                    return;
-                }
-            } catch (DataAccessException e) {
-                sendError(session, "Invalid auth token");
-                return;
-            }
+            // Validate the move request
+            validateMoveRequest(session, moveCommand, conn);
 
-            // Get current game state
+            // Get game data
             GameData gameData = dataAccess.getGame(moveCommand.getGameID());
-            if (gameData == null) {
-                sendError(session, "Game not found");
-                return;
-            }
-
-            // Check if game has been resigned
-            if (resignedGames.contains(moveCommand.getGameID())) {
-                sendError(session, "Game is already over");
-                return;
-            }
             ChessGame game = gameData.game();
-
-            // Check if game is over (resigned or checkmate)
-            if (game.isInCheckmate(ChessGame.TeamColor.WHITE) ||
-                    game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                sendError(session, "Game is already over");
-                return;
-            }
-
-            // Verify it's the player's turn and they're a player (not observer)
-            boolean isWhiteMove = game.getTeamTurn() == ChessGame.TeamColor.WHITE;
-            if ((isWhiteMove && !conn.username.equals(gameData.whiteUsername())) ||
-                    (!isWhiteMove && !conn.username.equals(gameData.blackUsername()))) {
-                sendError(session, "Not your turn");
-                return;
-            }
-
-            // Make sure they're moving their own piece
-            ChessPosition startPos = moveCommand.getMove().getStartPosition();
-            ChessPiece piece = game.getBoard().getPiece(startPos);
-            if (piece == null) {
-                sendError(session, "No piece at start position");
-                return;
-            }
-
-            boolean isWhitePiece = piece.getTeamColor() == ChessGame.TeamColor.WHITE;
-            if ((isWhitePiece && !conn.username.equals(gameData.whiteUsername())) ||
-                    (!isWhitePiece && !conn.username.equals(gameData.blackUsername()))) {
-                sendError(session, "Can't move opponent's pieces");
-                return;
-            }
 
             // Make the move
             try {
@@ -283,27 +297,15 @@ public class WebSocketHandler {
 
             // Notify about the move
             String moveNotification = String.format("%s moved from %s to %s",
-                    conn.username,
-                    formatChessPos(moveCommand.getMove().getStartPosition()),
-                    formatChessPos(moveCommand.getMove().getEndPosition()));
+                    conn.username, moveCommand.getMove().getStartPosition(),
+                    moveCommand.getMove().getEndPosition());
             broadcastNotification(moveCommand.getGameID(), session, moveNotification);
 
-            // Check for check/checkmate
-            if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                broadcastToAll(moveCommand.getGameID(),
-                        new NotificationMessage("White is in checkmate!"));
-            } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                broadcastToAll(moveCommand.getGameID(),
-                        new NotificationMessage("Black is in checkmate!"));
-            } else if (game.isInCheck(ChessGame.TeamColor.WHITE)) {
-                broadcastToAll(moveCommand.getGameID(),
-                        new NotificationMessage("White is in check!"));
-            } else if (game.isInCheck(ChessGame.TeamColor.BLACK)) {
-                broadcastToAll(moveCommand.getGameID(),
-                        new NotificationMessage("Black is in check!"));
-            }
+            // Handle any resulting game state changes
+            handleGameStateNotifications(game, moveCommand.getGameID());
+
         } catch (Exception e) {
-            sendError(session, "Error making move: " + e.getMessage());
+            sendError(session, e.getMessage());
         }
     }
 
@@ -361,14 +363,18 @@ public class WebSocketHandler {
     }
 
     private String determineRole(GameData game, String username) {
-        if (username.equals(game.whiteUsername())) return "WHITE";
-        if (username.equals(game.blackUsername())) return "BLACK";
+        if (username.equals(game.whiteUsername())) {
+            return "WHITE";
+        }
+        if (username.equals(game.blackUsername())) {
+            return "BLACK";
+        }
         return "observer";
     }
 
     private void sendToSession(Session session, ServerMessage message) {
         try {
-            session.getRemote().sendString(gson.toJson(message));
+            session.getRemote().sendString(GSON.toJson(message));
         } catch (Exception e) {
             System.err.println("Error sending message: " + e.getMessage());
         }

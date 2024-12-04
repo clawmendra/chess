@@ -350,7 +350,9 @@ public class GamePlay implements WebSocketClient.ServerMessageHandler {
 
 
     private boolean isPositionHighlighted(ChessPosition pos) {
-        if (highlightedPosition != null && highlightedPosition.equals(pos)) return true;
+        if (highlightedPosition != null && highlightedPosition.equals(pos)) {
+            return true;
+        }
         {
             return highlightedMoves.stream().anyMatch(move -> move.getEndPosition().equals(pos));
         }
